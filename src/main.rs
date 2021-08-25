@@ -122,11 +122,13 @@ fn main() -> ! {
 
     sm.set_enabled(true);
 
-    const NLED: usize = 60;
+    const NLED: usize = 1;
 
-    let data = [u32::MAX; NLED];
-    for word in data {
-        sm.push(word);
+    let data = [0xFF0000; NLED];
+    for (i, word) in data.iter().enumerate() {
+        if !sm.write_tx(*word) {
+            panic!("not written! i={}, w={}", i, word);
+        }
     }
 
     let string = debug::breakup(string);
