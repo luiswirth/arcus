@@ -8,7 +8,9 @@ edition = "2018"
 [dependencies]
 cortex-m = "0.7.3"
 #pico = { git = "https://github.com/rp-rs/rp-hal.git", branch = "main" }
-pico_explorer = { git = "https://github.com/rp-rs/rp-hal.git", branch = "main" }
+#pico_explorer = { git = "https://github.com/rp-rs/rp-hal.git", branch = "main" }
+pico_explorer = { git = "https://github.com/henkkuli/rp-hal.git", branch = "pio" }
+pio = { git = "https://github.com/henkkuli/pio-rs.git", branch = "main" }
 #pico = { git = "https://github.com/henkkuli/rp-hal.git", branch = "main" }
 cortex-m-rt = "0.6"
 embedded-time = "0.12.0"

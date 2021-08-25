@@ -294,7 +294,7 @@ checksum = "acbf547ad0c65e31259204bd90935776d1c693cec2f4ff7abb7a1bbbd40dfe58"
 [[package]]
 name = "pico_explorer"
 version = "0.1.0"
-source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#ee5e6ee1cb794bac9e3cd910acf0f725f02b3545"
+source = "git+https://github.com/henkkuli/rp-hal.git?branch=pio#6437888a78bf7cae5cb4b9159074183c69e01795"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
@@ -320,7 +320,17 @@ dependencies = [
  "embedded-time",
  "nb 1.0.0",
  "pico_explorer",
+ "pio",
  "rp2040-boot2",
+]
+
+[[package]]
+name = "pio"
+version = "0.1.0"
+source = "git+https://github.com/henkkuli/pio-rs.git?branch=main#c42e0eecf88a7b6a2de534aa2924b40bb8bbee0e"
+dependencies = [
+ "arrayvec",
+ "paste",
 ]
 
 [[package]]
@@ -358,22 +368,22 @@ dependencies = [
 
 [[package]]
 name = "rp2040-hal"
-version = "0.2.0"
-source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#ee5e6ee1cb794bac9e3cd910acf0f725f02b3545"
+version = "0.1.0"
+source = "git+https://github.com/henkkuli/rp-hal.git?branch=pio#6437888a78bf7cae5cb4b9159074183c69e01795"
 dependencies = [
  "cortex-m",
  "embedded-hal",
  "embedded-time",
  "nb 1.0.0",
  "paste",
+ "pio",
  "rp2040-pac",
 ]
 
 [[package]]
 name = "rp2040-pac"
 version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dab4841534bf3920646ee45ead026be6a4f490117e0b7e249e904a0b0325447c"
+source = "git+https://github.com/rp-rs/rp2040-pac?branch=main#fbcfeb723f145ae4764e09068ae1b07c7ba1f38d"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
