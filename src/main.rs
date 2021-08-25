@@ -71,22 +71,30 @@ fn main() -> ! {
 
     let mut assembler = pio::Assembler::new_with_side_set(side_set);
 
+    //      low      high
+    // 0:   0.85us + 0.40us
+    // 1:   0.45us + 0.8us
+    //
+    // T = 1 is 125ns = 0.125us
+    //
+    // REAL
+    //      
+    // 0: l 0.375us + h 0.25us + l 0.625 == 0.25 h + 1.0 l
+    // 1: l 0.375us + h 0.25us + h 0.625 == 0.875 h + 0.375 l
     const T1: u8 = 2;
     const T2: u8 = 5;
     const T3: u8 = 3;
     let mut bitloop = assembler.label();
     let mut do_one = assembler.label();
     let mut do_zero = assembler.label();
-    //let mut wrap_source = assembler.label();
-    //assembler.bind(&mut wrap_target);
     assembler.bind(&mut bitloop);
-    assembler.out_with_delay_and_side_set(pio::OutDestination::X, 1, T3 - 1, 0);
-    assembler.jmp_with_delay_and_side_set(pio::JmpCondition::XIsZero, &mut do_zero, T1 - 1, 1);
+    assembler.out_with_delay_and_side_set(pio::OutDestination::X, 1, T3 - 1, 0); // 0.375us
+    assembler.jmp_with_delay_and_side_set(pio::JmpCondition::XIsZero, &mut do_zero, T1 - 1, 1); // 0.25us
     assembler.bind(&mut do_one);
-    assembler.jmp_with_delay_and_side_set(pio::JmpCondition::Always, &mut bitloop, T2 - 1, 1);
+    assembler.jmp_with_delay_and_side_set(pio::JmpCondition::Always, &mut bitloop, T2 - 1, 1); // 0.625us
     assembler.bind(&mut do_zero);
     // Pseudoinstruction: NOP
-    assembler.mov_with_delay_and_side_set(
+    assembler.mov_with_delay_and_side_set( // 0.625us
         pio::MovDestination::Y,
         pio::MovOperation::None,
         pio::MovSource::Y,
@@ -104,7 +112,8 @@ fn main() -> ! {
     let sm = &pio.state_machines()[0];
 
     let cycles_per_bit = T1 + T2 + T3;
-    const FREQ: u32 = 8_000_000;
+    const TIME: f32 = 300e-9;
+    const FREQ: f32 = 1.0 / TIME;
     let div = clock_freq as f32 / (FREQ as f32 * cycles_per_bit as f32);
 
     let builder = hal::pio::PIOBuilder::default()
@@ -122,9 +131,11 @@ fn main() -> ! {
 
     sm.set_enabled(true);
 
-    const NLED: usize = 1;
+    const NLED: usize = 2;
+    //let data = [0xFFFFFF, 0];
+    let data = [0, 0xFFFFFF];
 
-    let data = [0xFF0000; NLED];
+    //let data = [0xFF0000; NLED];
     for (i, word) in data.iter().enumerate() {
         if !sm.write_tx(*word) {
             panic!("not written! i={}, w={}", i, word);
