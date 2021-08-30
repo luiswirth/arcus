@@ -7,21 +7,21 @@ edition = "2018"
 
 [dependencies]
 cortex-m = "0.7.3"
-#pico = { git = "https://github.com/rp-rs/rp-hal.git", branch = "main" }
-#pico_explorer = { git = "https://github.com/rp-rs/rp-hal.git", branch = "main" }
-pico_explorer = { git = "https://github.com/henkkuli/rp-hal.git", branch = "pio" }
-pio = { git = "https://github.com/henkkuli/pio-rs.git", branch = "main" }
-#pico = { git = "https://github.com/henkkuli/rp-hal.git", branch = "main" }
 cortex-m-rt = "0.6"
+cortex-m-semihosting = "0.3.7"
+embedded-hal = "0.2.6"
 embedded-time = "0.12.0"
 embedded-graphics = "0.7.1"
 display-interface = "0.4.1"
 arrayvec = { version = "0.7.1", default-features = false }
 nb = "1.0.0"
 
-#panic-semihosting = "0.5.6"
-cortex-m-semihosting = "0.3.7"
-embedded-hal = "0.2.6"
 rp2040-boot2 = "0.1.2"
-#pio = { git = "https://github.com/henkkuli/pio-rs.git", branch = "main" }
+
+pico_explorer = { git = "https://github.com/henkkuli/rp-hal.git", branch = "pio" }
+pio = { git = "https://github.com/henkkuli/pio-rs.git", branch = "main" }
+#pico = { git = "https://github.com/rp-rs/rp-hal.git", branch = "main" }
+#pico_explorer = { git = "https://github.com/rp-rs/rp-hal.git", branch = "main" }
+#pico = { git = "https://github.com/henkkuli/rp-hal.git", branch = "main" }
+
 

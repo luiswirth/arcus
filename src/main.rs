@@ -67,9 +67,13 @@ fn main() -> ! {
 
     let clock_freq = clocks.system_clock.freq().integer();
 
-    let side_set = pio::SideSet::new(false, 1, false);
+    // maybe (false, 1, true)
+    let side_set = pio::SideSet::new(true, 1, false);
 
     let mut assembler = pio::Assembler::new_with_side_set(side_set);
+
+    // configure pin as output
+    assembler.set(pio::SetDestination::PINDIRS, 1);
 
     const T0: u8 = 2;
     const T1: u8 = 2;
@@ -94,13 +98,9 @@ fn main() -> ! {
         0,
     );
 
-    writeln!(string, "{:?}", assembler).unwrap();
-
     let program = assembler.assemble(None);
-    writeln!(string, "{:?}", program).unwrap();
 
     let pio = hal::pio::PIO::new(p.PIO0, &mut p.RESETS);
-    writeln!(string, "{:?}", pio).unwrap();
     let sm = &pio.state_machines()[0];
 
     let cycles_per_bit = T1 + T2 + T3;
@@ -111,6 +111,7 @@ fn main() -> ! {
     let builder = hal::pio::PIOBuilder::default()
         .with_program(&program)
         .buffers(hal::pio::Buffers::OnlyTx)
+        .set_pins(0, 1)
         .side_set(side_set)
         .side_set_pin_base(0)
         .out_shift_direction(hal::pio::ShiftDirection::Left)
@@ -118,26 +119,14 @@ fn main() -> ! {
         .pull_threshold(32)
         .clock_divisor(div);
 
-    writeln!(string, "{:?}", builder).unwrap();
     builder.build(&pio, sm).unwrap();
 
     sm.set_enabled(true);
 
-    const NLED: usize = 2;
-    let data0 = [0xFFFFFF, 0];
-    let data1 = [0, 0xFFFFFF];
+    const NLED: usize = 60;
 
-    //let data = [0xFF0000; NLED];
-    for (i, word) in data0.iter().enumerate() {
-        if !sm.write_tx(*word) {
-            panic!("not written! i={}, w={}", i, word);
-        }
-    }
-    delay.delay_ms(100);
-    for (i, word) in data1.iter().enumerate() {
-        if !sm.write_tx(*word) {
-            panic!("not written! i={}, w={}", i, word);
-        }
+    for _ in 0..NLED {
+        sm.push(color([255, 255, 255, 255]));
     }
 
     let string = debug::breakup(string);
@@ -148,7 +137,6 @@ fn main() -> ! {
     }
 }
 
-#[allow(dead_code)]
 fn color([r, g, b, w]: [u8; 4]) -> u32 {
     let mut grbw = 0u32;
     grbw |= (g as u32) << 24;
