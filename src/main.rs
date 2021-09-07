@@ -10,12 +10,7 @@ use cortex_m_semihosting::hprintln;
 use embedded_time::fixed_point::FixedPoint;
 use pico_explorer::{
     hal::{
-        self,
-        adc::Adc,
-        clocks::ClockSource,
-        sio::Sio,
-        uart::UartPeripheral,
-        watchdog::Watchdog,
+        self, adc::Adc, clocks::ClockSource, sio::Sio, uart::UartPeripheral, watchdog::Watchdog,
     },
     pac, PicoExplorer, XOSC_CRYSTAL_FREQ,
 };
@@ -77,14 +72,13 @@ fn main() -> ! {
     let mut do_zero = assembler.label();
     let mut wrap_source = assembler.label();
 
-    const T0: u8 = 2;
     const T1: u8 = 2;
-    const T2: u8 = 2;
-    const T3: u8 = 4;
+    const T2: u8 = 5;
+    const T3: u8 = 3;
 
     assembler.bind(&mut wrap_target);
     assembler.bind(&mut bitloop);
-    assembler.out_with_delay_and_side_set(pio::OutDestination::X, 1, T0 - 1, 0);
+    assembler.out_with_delay_and_side_set(pio::OutDestination::X, 1, T3 - 1, 0);
     assembler.jmp_with_delay_and_side_set(pio::JmpCondition::XIsZero, &mut do_zero, T1 - 1, 1);
     assembler.bind(&mut do_one);
     assembler.jmp_with_delay_and_side_set(pio::JmpCondition::Always, &mut bitloop, T2 - 1, 1);
@@ -94,7 +88,7 @@ fn main() -> ! {
         pio::MovDestination::Y,
         pio::MovOperation::None,
         pio::MovSource::Y,
-        T3 - 1,
+        T2 - 1,
         0,
     );
     assembler.bind(&mut wrap_source);
@@ -104,20 +98,14 @@ fn main() -> ! {
     let pio = hal::pio::PIO::new(p.PIO0, &mut p.RESETS);
     let sm = &pio.state_machines()[0];
 
-    let cycles_per_bit = T0 + T1 + T2 + T3;
-    const TIME: f32 = 150e-9;
-    const FREQ: f32 = 1.0 / TIME;
-    let clock_freq = clocks.system_clock.get_freq().0;
-    let div = clock_freq as f32 / (FREQ as f32 * cycles_per_bit as f32);
-
-    writeln!(string, "target_freq: {}", FREQ).unwrap();
-    writeln!(string, "clock_freq: {}", clock_freq).unwrap();
-    writeln!(string, "div: {}", div).unwrap();
+    let clock_freq = clocks.system_clock.get_freq().0 as f32;
+    const FREQ: f32 = 8_000_000.0;
+    let div = clock_freq / FREQ;
 
     let builder = hal::pio::PIOBuilder::default()
         .with_program(&program)
         .buffers(hal::pio::Buffers::OnlyTx)
-        .out_shift_direction(hal::pio::ShiftDirection::Right)
+        .out_shift_direction(hal::pio::ShiftDirection::Left)
         .autopull(true)
         .pull_threshold(32)
         .clock_divisor(div)
@@ -148,12 +136,20 @@ fn main() -> ! {
     uart.write_full_blocking(b"UART Test!!!\r\n");
     hprintln!("semihosting test!!").unwrap();
 
+    let push = |c| {
+        while !sm.write_tx(c) {}
+    };
+
     loop {
-        sm.push(0xFF_FF_FF_FF);
-        sm.push(0xFF_00_00_00);
-        sm.push(0x00_FF_00_00);
-        sm.push(0x00_00_FF_00);
-        sm.push(0x00_00_00_FF);
+        for _ in 0..20 {
+            push(0xFF_00_00_00);
+        }
+        for _ in 20..40 {
+            push(0x00_FF_00_00);
+        }
+        for _ in 40..60 {
+            push(0x00_00_FF_00);
+        }
         delay.delay_ms(1000);
         //cortex_m::asm::nop();
     }
