@@ -24,4 +24,4 @@ pio = { git = "https://github.com/henkkuli/pio-rs.git", branch = "main" }
 #pico_explorer = { git = "https://github.com/rp-rs/rp-hal.git", branch = "main" }
 #pico = { git = "https://github.com/henkkuli/rp-hal.git", branch = "main" }
 
-
+palette = { version = "0.6.0", default-features = false, features = [ "libm" ] }
