@@ -1,14 +1,17 @@
 #![no_std]
 #![no_main]
 
-mod debug;
-mod lights;
+pub mod light;
 
 use cortex_m::delay::Delay;
 use cortex_m_rt::entry;
 
 use embedded_time::fixed_point::FixedPoint;
-use lights::Lights;
+use light::{
+  show::{demo::DemoShow, quick::QuickShow, Show},
+  Lights, Utils,
+};
+use panic_semihosting as _;
 
 use pico_explorer::{
   hal::{self, adc::Adc, clocks::ClockSource, sio::Sio, uart::UartPeripheral, watchdog::Watchdog},
@@ -34,6 +37,7 @@ struct App {
   _explorer: PicoExplorer,
   lights: Lights,
   _uart: UartPeripheral<hal::uart::Enabled, pac::UART0>,
+  utils: Utils,
 }
 
 impl App {
@@ -73,8 +77,8 @@ impl App {
       pins.gpio2.into_mode(),
       &mut p.RESETS,
       clocks.system_clock.get_freq().0 as f32,
-      delay,
     );
+    let utils = Utils::new(delay);
 
     let _uart_tx_pin = pins.gpio0.into_mode::<hal::gpio::FunctionUart>();
     let _uart_rx_pin = pins.gpio1.into_mode::<hal::gpio::FunctionUart>();
@@ -96,28 +100,31 @@ impl App {
       //clocks,
       //adc,
       //sio,
-      _explorer: explorer,
       //pins,
+      _explorer: explorer,
       _uart: uart,
       lights,
+      utils,
     }
   }
 
-  /// Get a reference to the app's lights.
-  fn lights_mut(&mut self) -> &mut Lights {
-    &mut self.lights
+  fn run(mut self) -> ! {
+    //let mut show = QuickShow;
+    //let mut show = DemoShow;
+    let mut show = light::show::firefly::FireflyShow;
+    //let mut show = light::show::pendulum::PendulumShow;
+    //let mut show = light::show::gradient::GradientShow;
+
+    Show::play(&mut show, &mut self.lights, &mut self.utils);
+
+    loop {
+      cortex_m::asm::nop();
+    }
   }
 }
 
 #[entry]
 fn main() -> ! {
-  let mut app = App::init();
-
-  app
-    .lights_mut()
-    .play_lightshow(&mut lights::ExampleLightshow {});
-
-  loop {
-    cortex_m::asm::nop();
-  }
+  let app = App::init();
+  app.run();
 }

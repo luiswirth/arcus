@@ -15,6 +15,7 @@ embedded-graphics = "0.7.1"
 display-interface = "0.4.1"
 arrayvec = { version = "0.7.1", default-features = false }
 nb = "1.0.0"
+panic-semihosting = "0.5.6"
 
 rp2040-boot2 = "0.1.2"
 
@@ -25,3 +26,7 @@ pio = { git = "https://github.com/henkkuli/pio-rs.git", branch = "main" }
 #pico = { git = "https://github.com/henkkuli/rp-hal.git", branch = "main" }
 
 palette = { version = "0.6.0", default-features = false, features = [ "libm" ] }
+
+rand = { version = "0.8.4", default-features = false, features = [ "small_rng" ] }
+num-traits = { version = "0.2.14", default-features = false, features = [ "libm" ] }
+
