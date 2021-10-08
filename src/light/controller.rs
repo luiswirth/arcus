@@ -1,5 +1,3 @@
-use cortex_m::delay::Delay;
-
 use super::{Color, Lights};
 
 /// Raw Controller.
@@ -7,10 +5,9 @@ use super::{Color, Lights};
 // TODO: Switch to a iterator instead of array?
 pub struct DirectController<'a>(&'a mut Lights);
 impl<'a> DirectController<'a> {
-  const N: usize = Lights::N;
   pub fn set_display(&mut self, colors: [u32; Lights::N]) {
     for c in colors {
-      self.0.sm_force_push(c);
+      self.0.force_write(c);
     }
   }
 }
@@ -23,7 +20,7 @@ pub trait MemoryController<'a> {
   fn new(lights: &'a mut Lights) -> Self;
   fn set(&mut self, i: usize, color: Color);
   fn get(&self, i: usize) -> Color;
-  fn display(&self);
+  fn display(&mut self);
 }
 pub trait MemoryControllerExt {
   fn set_all(&mut self, color: Color);
@@ -53,9 +50,9 @@ impl<'a> MemoryController<'a> for U32MemoryController<'a> {
     Color::from_u32(self.memory[i])
   }
 
-  fn display(&self) {
+  fn display(&mut self) {
     for c in &self.memory {
-      self.lights.sm_force_push(*c);
+      self.lights.force_write(*c);
     }
   }
 }
@@ -81,9 +78,9 @@ impl<'a> MemoryController<'a> for ColorMemoryController<'a> {
     self.memory[i]
   }
 
-  fn display(&self) {
+  fn display(&mut self) {
     for c in &self.memory {
-      self.lights.sm_force_push(c.into_u32());
+      self.lights.force_write(c.into_u32());
     }
   }
 }

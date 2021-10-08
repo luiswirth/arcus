@@ -3,34 +3,54 @@ pub mod controller;
 pub mod show;
 
 use cortex_m::delay::Delay;
+use embedded_hal::prelude::*;
+use embedded_time::duration::Extensions;
 use pico_explorer::{
-  hal::{self, gpio},
+  hal::{
+    self, gpio,
+    pac::{PIO0, TIMER},
+    pio::{PIOExt, Tx, SM0},
+    timer::{CountDown, Timer},
+  },
   pac,
 };
+use smart_leds_trait::SmartLedsWrite;
 
-use crate::light::controller::{MemoryController, U32MemoryController};
+use self_cell::self_cell;
 
 use self::color::Color;
 
+self_cell!(
+  struct CountDownCell {
+    owner: Timer,
+
+    #[covariant]
+    dependent: CountDown,
+  }
+);
+
 pub struct Lights {
-  pio: hal::pio::PIO<pac::PIO0>,
+  tx: Tx<(PIO0, SM0)>,
+  count_down: CountDownCell,
 }
 
 impl Lights {
   pub const N: usize = 60;
   pub fn init(
     pio_instance: pac::PIO0,
-    pin2: gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>,
     resets: &mut pac::RESETS,
     sysclock_freq: f32,
+    _pin2: gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>,
+    timer: TIMER,
   ) -> Self {
-    let side_set = pio::SideSet::new(true, 1, false);
+    //let side_set = pio::SideSet::new(true, 1, false);
+    let side_set = pio::SideSet::new(false, 1, false);
 
     let mut assembler = pio::Assembler::new_with_side_set(side_set);
 
     // configure pin as output
     // TODO: is this really necessary for side_set?
-    assembler.set(pio::SetDestination::PINDIRS, 1);
+    assembler.set_with_side_set(pio::SetDestination::PINDIRS, 1, 0);
 
     let mut wrap_target = assembler.label();
     let mut bitloop = assembler.label();
@@ -59,38 +79,69 @@ impl Lights {
     );
     assembler.bind(&mut wrap_source);
 
-    let program = assembler.assemble(Some((wrap_source, wrap_target)));
+    let program = assembler.assemble_with_wrap(wrap_source, wrap_target);
 
-    let pio = hal::pio::PIO::new(pio_instance, resets);
-    let sm = &pio.state_machines()[0];
+    let (mut pio, sm, _, _, _) = pio_instance.split(resets);
+
+    let installed = pio.install(&program).unwrap();
 
     const FREQ: f32 = 8_000_000.0;
     let div = sysclock_freq / FREQ;
 
-    let builder = hal::pio::PIOBuilder::default()
-      .with_program(&program)
+    let (sm, _, tx) = hal::pio::PIOBuilder::from_program(installed)
       .buffers(hal::pio::Buffers::OnlyTx)
       .out_shift_direction(hal::pio::ShiftDirection::Left)
       .autopull(true)
       .pull_threshold(32)
       .clock_divisor(div)
       .set_pins(2, 1)
-      .side_set(side_set)
-      .side_set_pin_base(2);
+      .side_set_pin_base(2)
+      .build(sm);
 
-    builder.build(&pio, sm).unwrap();
-    sm.set_enabled(true);
+    sm.start();
 
-    Self { pio }
-  }
+    let timer = Timer::new(timer, resets);
+    let count_down = CountDownCell::new(timer, Timer::count_down);
 
-  fn sm(&self) -> &hal::pio::StateMachine<pac::PIO0> {
-    &self.pio.state_machines()[0]
+    Self { tx, count_down }
   }
 
   // TODO: block instead of retry
-  fn sm_force_push(&self, value: u32) {
-    while !self.sm().write_tx(value) {}
+  fn force_write(&mut self, word: u32) {
+    while !self.tx.write(word) {}
+  }
+}
+
+// TODO: maybe use more complete crate: `smart_leds` instead of `smart_leds_trait`
+impl SmartLedsWrite for Lights {
+  type Color = smart_leds_trait::RGBA<u8>;
+  type Error = ();
+
+  fn write<T, I>(&mut self, iterator: T) -> Result<(), Self::Error>
+  where
+    T: Iterator<Item = I>,
+    I: Into<Self::Color>,
+  {
+    self.count_down.with_dependent_mut(|_, c| {
+      let _ = nb::block!(c.wait());
+    });
+
+    for color in iterator {
+      let color: Self::Color = color.into();
+
+      let mut grbw = 0u32;
+      grbw |= (color.g as u32) << 24;
+      grbw |= (color.r as u32) << 16;
+      grbw |= (color.b as u32) << 8;
+      grbw |= (color.a as u32) << 0;
+
+      self.force_write(grbw);
+    }
+
+    self.count_down.with_dependent_mut(|_, c| {
+      c.start(60.microseconds());
+    });
+    Ok(())
   }
 }
 

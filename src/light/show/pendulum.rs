@@ -23,10 +23,9 @@ impl Show for PendulumShow {
     let mut time = 0.;
     loop {
       let mut pos_arr = [0f32; 3];
-      for c in 0..3 {
+      for (c, pos) in pos_arr.iter_mut().enumerate() {
         let freq = freq0 * (c as f32 + 1.);
-        let pos = ((time * freq * TAU).sin() + 1.) / 2.;
-        pos_arr[c] = pos;
+        *pos = ((time * freq * TAU).sin() + 1.) / 2.;
       }
       for l in 0..N {
         let lf = l as f32 / NM;

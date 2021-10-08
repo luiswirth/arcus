@@ -12,14 +12,12 @@ use pico_explorer::{
   Screen,
 };
 
-pub type Led = Pin<Gpio25, Output<PushPull>>;
 pub type ArrayString = arrayvec::ArrayString<{ NCHARS as usize }>;
 
 pub const SCREEN_SIZE: u16 = 240;
 pub const SCREEN_SIZE2: usize = SCREEN_SIZE as usize * SCREEN_SIZE as usize;
 
 static mut SCREEN: Option<Screen> = None;
-static mut LED: Option<Led> = None;
 
 fn usage() {
   //let led = pins.led.into_push_pull_output();
@@ -31,14 +29,6 @@ fn usage() {
   //debug::sprint(&string);
 }
 
-pub fn led<'a>() -> &'a Led {
-  unsafe { LED.as_ref().unwrap() }
-}
-
-pub fn led_mut<'a>() -> &'a mut Led {
-  unsafe { LED.as_mut().unwrap() }
-}
-
 pub fn screen<'a>() -> &'a Screen {
   unsafe { SCREEN.as_ref().unwrap() }
 }
@@ -46,10 +36,7 @@ pub fn screen_mut<'a>() -> &'a mut Screen {
   unsafe { SCREEN.as_mut().unwrap() }
 }
 
-pub fn init_debug(led: Led, screen: Screen) {
-  unsafe {
-    LED = Some(led);
-  }
+pub fn init_debug(screen: Screen) {
   unsafe {
     SCREEN = Some(screen);
   }
@@ -104,8 +91,6 @@ pub fn draw_text(text: &str) {
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-  led_mut().set_high().unwrap();
-
   let mut buf = ArrayString::new();
   writeln!(buf, "{}", info).unwrap();
   buf = breakup(buf);

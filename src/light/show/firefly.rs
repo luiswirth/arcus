@@ -13,31 +13,43 @@ const N: usize = Lights::N;
 
 pub struct Firefly {
   pos: f32,
-  speed: f32,
+  vel: f32,
+  acc: f32,
   hue: f32,
 }
 
 impl Firefly {
   pub const PLACEHOLDER: Self = Self {
     pos: 0.0,
-    speed: 0.0,
+    vel: 0.0,
+    acc: 0.0,
     hue: 0.0,
   };
 
   pub fn new(rng: &mut impl Rng) -> Self {
     let pos = rng.gen::<f32>();
-    let speed = (rng.gen::<f32>() * 2.0 - 1.0) / 100.0;
+    let vel = 0.;
+    let acc = 0.;
     let hue = rng.gen::<f32>();
-    Self { pos, speed, hue }
+    Self { pos, vel, acc, hue }
   }
 
-  pub fn fly(&mut self) {
-    self.pos = self.pos + self.speed;
-    if self.pos >= 1.0 {
-      self.pos -= 1.0;
+  pub fn fly(&mut self, rng: &mut impl Rng) {
+    self.acc += (rng.gen::<f32>() * 2. - 1.) / 10000.;
+    self.pos += self.vel;
+    if self.pos >= 1. {
+      self.pos -= 1.;
     }
-    if self.pos < 0.0 {
-      self.pos += 1.0;
+    if self.pos < 0. {
+      self.pos += 1.;
+    }
+
+    self.hue += (rng.gen::<f32>() * 2. - 1.) / 100.;
+    if self.hue >= 1. {
+      self.pos -= 1.;
+    }
+    if self.hue < 0. {
+      self.hue += 1.
     }
   }
 
@@ -59,25 +71,23 @@ impl Firefly {
   }
 }
 
-// - random movement
-
 pub struct FireflyShow;
 impl Show for FireflyShow {
-  fn play(&mut self, lights: &mut Lights, utils: &mut Utils) {
+  fn play(&mut self, lights: &mut Lights, _utils: &mut Utils) {
     let mut ctrl = ColorMemoryController::new(lights);
 
     let mut rng = rand::rngs::SmallRng::seed_from_u64(17843938646114006223);
 
     const NMUGGI: usize = 2;
     let mut muggis = [Firefly::PLACEHOLDER; NMUGGI];
-    for i in 0..NMUGGI {
-      muggis[i] = Firefly::new(&mut rng);
+    for muggi in muggis.iter_mut() {
+      *muggi = Firefly::new(&mut rng);
     }
 
     loop {
       ctrl.set_all(Color::NONE);
       for muggi in &mut muggis {
-        muggi.fly();
+        muggi.fly(&mut rng);
         muggi.visualize(&mut ctrl);
       }
       ctrl.display();

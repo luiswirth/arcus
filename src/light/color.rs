@@ -56,8 +56,15 @@ impl Color {
   pub const GREEN: Self = Self::new(0.0, 1.0, 0.0, 0.0);
   pub const BLUE: Self = Self::new(0.0, 0.0, 1.0, 0.0);
   pub const WHITE: Self = Self::new(0.0, 0.0, 0.0, 1.0);
+
   pub const ALL: Self = Self::new(1.0, 1.0, 1.0, 1.0);
   pub const NONE: Self = Self::new(0.0, 0.0, 0.0, 0.0);
+
+  pub const YELLOW: Self = Self::RED.mix_rgbw(Self::GREEN);
+  pub const MAGENTA: Self = Self::RED.mix_rgbw(Self::BLUE);
+  pub const CYAN: Self = Self::GREEN.mix_rgbw(Self::BLUE);
+
+  pub const ORANGE: Self = Self::RED.mix_rgbw(Self::YELLOW);
 }
 
 impl core::ops::Index<usize> for Color {
@@ -103,6 +110,8 @@ pub fn denormalize([r, g, b, w]: [f32; 4]) -> [u8; 4] {
   ]
 }
 
+#[allow(clippy::many_single_char_names)]
+#[allow(clippy::identity_op)]
 pub fn pack([r, g, b, w]: [u8; 4]) -> u32 {
   let mut grbw = 0u32;
   grbw |= (g as u32) << 24;
@@ -112,6 +121,8 @@ pub fn pack([r, g, b, w]: [u8; 4]) -> u32 {
   grbw
 }
 
+#[allow(clippy::many_single_char_names)]
+#[allow(clippy::identity_op)]
 pub fn unpack(c: u32) -> [u8; 4] {
   let g = ((c | 0xFF_00_00_00) >> 24) as u8;
   let r = ((c | 0x00_FF_00_00) >> 16) as u8;
@@ -146,7 +157,7 @@ impl Color {
     )
   }
 
-  pub fn mix_rgbw(self, other: Self) -> Self {
+  pub const fn mix_rgbw(self, other: Self) -> Self {
     self.gradient_rgbw(other, 0.5)
   }
 
@@ -159,12 +170,20 @@ impl Color {
     Color::from_hsv(h, s, v)
   }
 
-  pub fn gradient_rgbw(self, other: Self, t: f32) -> Self {
+  pub const fn gradient_rgbw(self, other: Self, t: f32) -> Self {
     Color::new(
       (1.0 - t) * self.r + t * other.r,
       (1.0 - t) * self.g + t * other.g,
       (1.0 - t) * self.b + t * other.b,
       (1.0 - t) * self.w + t * other.w,
+    )
+  }
+  pub fn gradient_hsv(self, other: Self, t: f32) -> Self {
+    let this = self.into_hsv();
+    Color::from_hsv(
+      (1.0 - t) * this[0] + t * other.r,
+      (1.0 - t) * this[1] + t * other.g,
+      (1.0 - t) * this[2] + t * other.b,
     )
   }
 }
