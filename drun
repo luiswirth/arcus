@@ -1,5 +1,0 @@
-#!/bin/sh
-
-sudo mount -o uid=1000,gid=1000 /dev/sdi1 /mnt/pico
-cargo r
-sudo umount /mnt/pico

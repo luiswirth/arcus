@@ -1,0 +1,8 @@
+#!/bin/sh
+
+bin_path=$1
+
+sudo mount -o uid=1000,gid=1000 /dev/sdh1 /mnt/pico
+elf2uf2-rs $1
+cp $1.elf /mnt/pico
+sudo umount /mnt/pico
