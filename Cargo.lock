@@ -131,6 +131,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "cordic"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ed0a176c0b8c5c95fa0523177530364c5b68a8895d9745730dbfa692a7412d0"
+dependencies = [
+ "fixed",
+]
+
+[[package]]
 name = "cortex-m"
 version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -297,6 +306,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixed"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d333a26ec13a023c6dff4b7584de4d323cfee2e508f5dd2bbee6669e4f7efdf"
+dependencies = [
+ "az",
+ "bytemuck",
+ "half",
+ "typenum",
+]
+
+[[package]]
 name = "float-cmp"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -332,6 +353,12 @@ dependencies = [
  "typenum",
  "version_check",
 ]
+
+[[package]]
+name = "half"
+version = "1.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bd566f08830dd1fa75b2a5f1d8def8336de7f08b2692a9a71efbe7188aea36f"
 
 [[package]]
 name = "hash32"
@@ -544,7 +571,7 @@ checksum = "acbf547ad0c65e31259204bd90935776d1c693cec2f4ff7abb7a1bbbd40dfe58"
 [[package]]
 name = "pico_explorer"
 version = "0.1.0"
-source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#02cb4b8b067ae9ab929d0ab2f1f86e588a57a704"
+source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#233f7c947514b6b96ff8a146c2ddac8ac16ce510"
 dependencies = [
  "cortex-m 0.7.3",
  "cortex-m-rt",
@@ -562,6 +589,7 @@ version = "0.1.0"
 dependencies = [
  "alloc-cortex-m",
  "arrayvec",
+ "cordic",
  "cortex-m 0.7.3",
  "cortex-m-rt",
  "cortex-m-semihosting",
@@ -569,6 +597,7 @@ dependencies = [
  "embedded-graphics",
  "embedded-hal",
  "embedded-time",
+ "fixed",
  "heapless",
  "nb 1.0.0",
  "num-traits",
@@ -585,7 +614,7 @@ dependencies = [
 [[package]]
 name = "pio"
 version = "0.1.0"
-source = "git+https://github.com/rp-rs/pio-rs.git?branch=main#8c12d426685ac23cac975341e728fc0a50ebfd6c"
+source = "git+https://github.com/rp-rs/pio-rs.git?branch=main#c2d98c0e1ce36cddf22a2d4ed5a10bb8f55897b0"
 dependencies = [
  "arrayvec",
  "num_enum",
@@ -594,9 +623,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.29"
+version = "1.0.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9f5105d4fdaab20335ca9565e106a5d9b82b6219b5ba735731124ac6711d23d"
+checksum = "edc3358ebc67bc8b7fa0c007f945b0b18226f78437d61bec735a9eb96b61ee70"
 dependencies = [
  "unicode-xid",
 ]
@@ -674,9 +703,9 @@ dependencies = [
 
 [[package]]
 name = "rp2040-boot2"
-version = "0.1.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "233203dcc51018ec08df8462fc84c0170aa4b4220bbcbe56901bc637ba98604a"
+checksum = "8b480fe63133f0d639f82ce5a027fee7cac7ac92f67ef1896ee036a6f9737128"
 dependencies = [
  "crc-any",
 ]
@@ -684,7 +713,7 @@ dependencies = [
 [[package]]
 name = "rp2040-hal"
 version = "0.3.0"
-source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#02cb4b8b067ae9ab929d0ab2f1f86e588a57a704"
+source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#233f7c947514b6b96ff8a146c2ddac8ac16ce510"
 dependencies = [
  "cortex-m 0.7.3",
  "embedded-hal",

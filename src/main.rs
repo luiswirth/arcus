@@ -27,9 +27,9 @@ use pico_explorer::{
 
 use light::show;
 
-#[link_section = ".boot2"]
+#[link_section = ".boot_loader"]
 #[used]
-pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER;
+pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER_W25Q080;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
