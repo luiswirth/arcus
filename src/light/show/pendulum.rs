@@ -3,7 +3,8 @@ use num_traits::Float;
 
 use crate::light::{
   color::Color,
-  controller::{MemoryController, U32MemoryController},
+  controller::{MemoryController, U32Memory, U32MemoryController},
+  show::State,
   Lights, Utils,
 };
 
@@ -13,10 +14,11 @@ const N: usize = Lights::N;
 const NM: f32 = (Lights::N - 1) as f32;
 pub struct PendulumShow;
 impl Show for PendulumShow {
-  fn play(&mut self, lights: &mut Lights, utils: &mut Utils) {
-    let mut ctrl = U32MemoryController::new(lights);
+  fn update(&mut self, lights: &mut Lights, utils: &mut Utils) -> State {
+    let mut mem = U32Memory::new();
+    let mut ctrl = U32MemoryController::new(lights, &mut mem);
 
-    let period = 5000f32;
+    let period = 500f32;
     let freq0 = period.recip();
     let delta = 2.;
 
@@ -43,5 +45,6 @@ impl Show for PendulumShow {
       utils.delay_ms(delta as u32);
       time += delta;
     }
+    State::Finished
   }
 }

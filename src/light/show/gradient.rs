@@ -1,6 +1,7 @@
 use crate::light::{
   color::Color,
-  controller::{MemoryController, U32MemoryController},
+  controller::{MemoryController, U32Memory, U32MemoryController},
+  show::State,
   Lights, Utils,
 };
 
@@ -9,8 +10,9 @@ use super::Show;
 const N: usize = Lights::N;
 pub struct GradientShow;
 impl Show for GradientShow {
-  fn play(&mut self, lights: &mut Lights, _utils: &mut Utils) {
-    let mut ctrl = U32MemoryController::new(lights);
+  fn update(&mut self, lights: &mut Lights, utils: &mut Utils) -> State {
+    let mut mem = U32Memory::new();
+    let mut ctrl = U32MemoryController::new(lights, &mut mem);
 
     let colors = [Color::YELLOW, Color::RED];
 
@@ -26,6 +28,10 @@ impl Show for GradientShow {
         }
       }
     }
-    ctrl.display();
+    loop {
+      ctrl.display();
+      utils.delay_ms(1000);
+    }
+    State::Finished
   }
 }

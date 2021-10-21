@@ -4,6 +4,7 @@ use rand::{Rng, SeedableRng};
 use crate::light::{
   color::Color,
   controller::{ColorMemoryController, MemoryController, MemoryControllerExt},
+  show::State,
   Lights, Utils,
 };
 
@@ -73,7 +74,7 @@ impl Firefly {
 
 pub struct FireflyShow;
 impl Show for FireflyShow {
-  fn play(&mut self, lights: &mut Lights, _utils: &mut Utils) {
+  fn update(&mut self, lights: &mut Lights, _utils: &mut Utils) -> State {
     let mut ctrl = ColorMemoryController::new(lights);
 
     let mut rng = rand::rngs::SmallRng::seed_from_u64(17843938646114006223);
@@ -93,5 +94,6 @@ impl Show for FireflyShow {
       ctrl.display();
       //utils.delay_ms(1000 / 60);
     }
+    State::Finished
   }
 }

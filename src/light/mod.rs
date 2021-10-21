@@ -20,6 +20,7 @@ use self_cell::self_cell;
 
 use self::color::Color;
 
+// self-referential cell
 self_cell!(
   struct CountDownCell {
     owner: Timer,
@@ -35,7 +36,7 @@ pub struct Lights {
 }
 
 impl Lights {
-  pub const N: usize = 60;
+  pub const N: usize = 60 * 4;
   pub fn init(
     pio_instance: pac::PIO0,
     resets: &mut pac::RESETS,
@@ -43,7 +44,6 @@ impl Lights {
     _pin2: gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>,
     timer: TIMER,
   ) -> Self {
-    //let side_set = pio::SideSet::new(true, 1, false);
     let side_set = pio::SideSet::new(false, 1, false);
 
     let mut assembler = pio::Assembler::new_with_side_set(side_set);

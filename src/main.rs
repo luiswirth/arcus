@@ -14,17 +14,18 @@ use alloc_cortex_m::CortexMHeap;
 use cortex_m::delay::Delay;
 use cortex_m_rt::entry;
 
+use alloc::{boxed::Box, vec::Vec};
+
 use embedded_time::fixed_point::FixedPoint;
 use light::{show::Show, Lights, Utils};
 //use panic_semihosting as _;
 
 use pico_explorer::{
-  hal::{
-    self, adc::Adc, clocks::ClockSource, sio::Sio, timer::Timer, uart::UartPeripheral,
-    watchdog::Watchdog,
-  },
+  hal::{self, adc::Adc, clocks::ClockSource, sio::Sio, uart::UartPeripheral, watchdog::Watchdog},
   pac, PicoExplorer, XOSC_CRYSTAL_FREQ,
 };
+
+use light::show;
 
 #[link_section = ".boot2"]
 #[used]
@@ -33,21 +34,19 @@ pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER;
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
-//static SHARED: Mutex<RefCell<Option<Shared>>> = Mutex::default();
-//pub struct Shared {
-//  pub delay: Delay,
-//}
+/// Show Managment
+///
+/// - Light show stack
+///     this enables switching to informational shows or animations
+///     and then returning back to the original show.
+///
 
 struct App {
-  //p: pac::Peripherals,
-  //cp: pac::CorePeripherals,
-  //clocks: ClocksManager,
-  //adc: Adc,
-  //sio: Sio,
-  //pins: Pins,
   lights: Lights,
   _uart: UartPeripheral<hal::uart::Enabled, pac::UART0>,
   utils: Utils,
+
+  stack: Vec<Box<dyn Show>>,
 }
 
 impl App {
@@ -63,7 +62,7 @@ impl App {
     let cp = pac::CorePeripherals::take().unwrap();
 
     let vec = vec![0, 1, 2, 4];
-    cortex_m_semihosting::hprintln!("{:?}", vec).unwrap();
+    //cortex_m_semihosting::hprintln!("{:?}", vec).unwrap();
 
     let mut watchdog = Watchdog::new(p.WATCHDOG);
     let clocks = hal::clocks::init_clocks_and_plls(
@@ -115,35 +114,25 @@ impl App {
     )
     .unwrap();
 
-    //let shared = Shared { delay };
-    //interrupt::free(|cs| SHARED.borrow(cs).replace(Some(shared)));
+    let stack = vec![Box::new(show::DemoShow::default()) as Box<dyn Show>];
 
     Self {
-      //p,
-      //cp,
-      //clocks,
-      //adc,
-      //sio,
-      //pins,
       _uart: uart,
       lights,
       utils,
+
+      stack,
     }
   }
 
   fn run(mut self) -> ! {
-    //let mut show = light::show::quick::QuickShow;
-    //let mut show = light::show::demo::DemoShow;
-    //let mut show = light::show::firefly::FireflyShow;
-    //let mut show = light::show::pendulum::PendulumShow;
-    let mut show = light::show::gradient::GradientShow;
-    //let mut show = light::show::lightning::SparkleShow;
-    //let mut show = light::show::lightning::CollisionShow;
-
-    Show::play(&mut show, &mut self.lights, &mut self.utils);
-
     loop {
-      cortex_m::asm::nop();
+      if let Some(show) = self.stack.last_mut() {
+        let state = Show::update(show.as_mut(), &mut self.lights, &mut self.utils);
+        if matches!(state, show::State::Finished) {
+          self.stack.pop();
+        }
+      }
     }
   }
 }

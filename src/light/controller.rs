@@ -17,7 +17,6 @@ impl<'a> DirectController<'a> {
 pub trait MemoryController<'a> {
   const N: usize = Lights::N;
 
-  fn new(lights: &'a mut Lights) -> Self;
   fn set(&mut self, i: usize, color: Color);
   fn get(&self, i: usize) -> Color;
   fn display(&mut self);
@@ -29,29 +28,37 @@ pub trait MemoryControllerExt {
 /// A memory controller which stores the raw u32 colors.
 /// Every get/set needs a conversion, but displays doesn't.
 /// Good if only a few colors change between every display.
-pub struct U32MemoryController<'a> {
-  lights: &'a mut Lights,
-  memory: [u32; Lights::N],
-}
-impl<'a> MemoryController<'a> for U32MemoryController<'a> {
-  fn new(lights: &'a mut Lights) -> Self {
+pub struct U32Memory([u32; Lights::N]);
+impl U32Memory {
+  pub fn new() -> Self {
     let memory = [0u32; Lights::N];
+    Self(memory)
+  }
+}
+
+pub struct U32MemoryController<'a> {
+  memory: &'a mut U32Memory,
+  lights: &'a mut Lights,
+}
+impl<'a> U32MemoryController<'a> {
+  pub fn new(lights: &'a mut Lights, memory: &'a mut U32Memory) -> Self {
     Self { lights, memory }
   }
-
+}
+impl<'a> MemoryController<'a> for U32MemoryController<'a> {
   fn set(&mut self, i: usize, color: Color) {
-    self.memory[i] = color.into_u32();
+    self.memory.0[i] = color.into_u32();
   }
 
   // TODO: fix or remove this.
   // This dones't seem to work, probably because
   // of the conversions between integers and floats.
   fn get(&self, i: usize) -> Color {
-    Color::from_u32(self.memory[i])
+    Color::from_u32(self.memory.0[i])
   }
 
   fn display(&mut self) {
-    for c in &self.memory {
+    for c in &self.memory.0 {
       self.lights.force_write(*c);
     }
   }
@@ -64,12 +71,13 @@ pub struct ColorMemoryController<'a> {
   lights: &'a mut Lights,
   memory: [Color; Lights::N],
 }
-impl<'a> MemoryController<'a> for ColorMemoryController<'a> {
-  fn new(lights: &'a mut Lights) -> Self {
+impl<'a> ColorMemoryController<'a> {
+  pub fn new(lights: &'a mut Lights) -> Self {
     let memory = [Color::NONE; Lights::N];
     Self { lights, memory }
   }
-
+}
+impl<'a> MemoryController<'a> for ColorMemoryController<'a> {
   fn set(&mut self, i: usize, color: Color) {
     self.memory[i] = color;
   }

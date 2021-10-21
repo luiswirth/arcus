@@ -38,11 +38,15 @@ impl Color {
   pub fn from_hsv(h: f32, s: f32, v: f32) -> Self {
     let hsv = palette::Hsv::new(h * 360.0, s, v);
     let rgb: palette::rgb::Rgb = palette::IntoColor::into_color(hsv);
+    // TODO: necessary?
+    let rgb = rgb.into_linear();
     let comps = rgb.into_components();
     Self::new(comps.0, comps.1, comps.2, 0.0)
   }
 
   pub fn into_hsv(self) -> [f32; 3] {
+    // TODO: necessary conversion?
+    //let rgb = palette::rgb::LinSrgb::new(self.r, self.g, self.b);
     let rgb = palette::rgb::Rgb::new(self.r, self.g, self.b);
     let rgb: palette::Hsv = palette::IntoColor::into_color(rgb);
     let comps = rgb.into_components();

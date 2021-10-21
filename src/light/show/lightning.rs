@@ -3,7 +3,8 @@ use rand::{Rng, SeedableRng};
 
 use crate::light::{
   color::Color,
-  controller::{MemoryController, MemoryControllerExt, U32MemoryController},
+  controller::{MemoryController, MemoryControllerExt, U32Memory, U32MemoryController},
+  show::State,
   Lights, Utils,
 };
 
@@ -13,15 +14,16 @@ const N: usize = Lights::N;
 
 pub struct SparkleShow;
 impl Show for SparkleShow {
-  fn play(&mut self, lights: &mut Lights, utils: &mut Utils) {
-    let mut ctrl = U32MemoryController::new(lights);
+  fn update(&mut self, lights: &mut Lights, utils: &mut Utils) -> State {
+    let mut mem = U32Memory::new();
+    let mut ctrl = U32MemoryController::new(lights, &mut mem);
 
     let mut rng = rand::rngs::SmallRng::seed_from_u64(17843938646114006223);
 
     loop {
       ctrl.set_all(Color::NONE);
-      //let origin = rng.gen_range(0..60);
-      let origin = 30;
+      let origin = rng.gen_range(0..N);
+      //let origin = N / 2;
       let color0 = rng.gen::<Color>();
       let color1 = rng.gen::<Color>();
       let low_range = (0..origin).rev();
@@ -38,6 +40,7 @@ impl Show for SparkleShow {
         utils.delay_ms(100);
       }
     }
+    State::Finished
   }
 }
 
@@ -88,8 +91,9 @@ const SPAWN_PROBABILITY: f32 = 1. / 10.;
 
 pub struct CollisionShow;
 impl Show for CollisionShow {
-  fn play(&mut self, lights: &mut Lights, utils: &mut Utils) {
-    let mut ctrl = U32MemoryController::new(lights);
+  fn update(&mut self, lights: &mut Lights, utils: &mut Utils) -> State {
+    let mut mem = U32Memory::new();
+    let mut ctrl = U32MemoryController::new(lights, &mut mem);
 
     let mut rng = rand::rngs::SmallRng::seed_from_u64(17843938646114006223);
     let mut particles = Vec::new();
@@ -156,6 +160,7 @@ impl Show for CollisionShow {
       ctrl.display();
       utils.delay_ms(50);
     }
+    State::Finished
   }
 }
 

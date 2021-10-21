@@ -1,3 +1,4 @@
 #!/bin/bash
 
-ssh pi@192.168.1.102 -f "picot/picot-rs/script/rp-exec $1"
+bin_name=$1
+ssh pi@192.168.1.102 -f "picot/picot-rs/script/rp-exec $bin_name"

@@ -7,16 +7,13 @@ use crate::light::{
 
 use super::Show;
 
-const N: usize = Lights::N;
-pub struct QuickShow;
-impl Show for QuickShow {
+pub struct OffShow;
+impl Show for OffShow {
   fn update(&mut self, lights: &mut Lights, _utils: &mut Utils) -> State {
     let mut mem = U32Memory::new();
     let mut ctrl = U32MemoryController::new(lights, &mut mem);
-
-    ctrl.set_all(Color::new(1.0, 0.0, 1.0, 0.0));
+    ctrl.set_all(Color::NONE);
     ctrl.display();
-
     State::Finished
   }
 }
