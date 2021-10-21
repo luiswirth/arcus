@@ -6,11 +6,7 @@ use embedded_graphics::{
   prelude::*,
   text::{Alignment, Baseline, LineHeight, Text, TextStyleBuilder},
 };
-use embedded_hal::digital::v2::OutputPin;
-use pico_explorer::{
-  hal::gpio::{bank0::Gpio25, Output, Pin, PushPull},
-  Screen,
-};
+use pico_explorer::Screen;
 
 pub type ArrayString = arrayvec::ArrayString<{ NCHARS as usize }>;
 
@@ -19,6 +15,7 @@ pub const SCREEN_SIZE2: usize = SCREEN_SIZE as usize * SCREEN_SIZE as usize;
 
 static mut SCREEN: Option<Screen> = None;
 
+#[allow(dead_code)]
 fn usage() {
   //let led = pins.led.into_push_pull_output();
 

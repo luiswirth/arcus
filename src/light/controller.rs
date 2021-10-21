@@ -29,10 +29,15 @@ pub trait MemoryControllerExt {
 /// Every get/set needs a conversion, but displays doesn't.
 /// Good if only a few colors change between every display.
 pub struct U32Memory([u32; Lights::N]);
-impl U32Memory {
-  pub fn new() -> Self {
+impl Default for U32Memory {
+  fn default() -> Self {
     let memory = [0u32; Lights::N];
     Self(memory)
+  }
+}
+impl U32Memory {
+  pub fn new() -> Self {
+    Default::default()
   }
 }
 

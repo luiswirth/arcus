@@ -1,3 +1,5 @@
+use piclib::{ONE, ZERO};
+
 use crate::light::{
   color::Color,
   controller::{MemoryController, MemoryControllerExt, U32Memory, U32MemoryController},
@@ -41,7 +43,7 @@ impl Show for DemoShow {
       }
       DemoState::SingleChannel { mut c, mut l } => {
         let mut color = Color::NONE;
-        color[c] = 1.;
+        color[c] = ONE;
         ctrl.set(l, color);
         ctrl.display();
         utils.delay_ms(40);
@@ -58,7 +60,7 @@ impl Show for DemoShow {
         State::Running
       }
       DemoState::Rgb { mut l } => {
-        let color = Color::new(1., 1., 1., 0.);
+        let color = Color::new(ONE, ONE, ONE, ZERO);
         ctrl.set(l, color);
         ctrl.display();
         utils.delay_ms(40);
@@ -72,7 +74,7 @@ impl Show for DemoShow {
         State::Running
       }
       DemoState::Rgbw { mut l } => {
-        let color = Color::new(1., 1., 1., 1.);
+        let color = Color::new(ONE, ONE, ONE, ONE);
         ctrl.set(l, color);
         ctrl.display();
         utils.delay_ms(40);

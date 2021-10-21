@@ -113,6 +113,7 @@ impl Lights {
 }
 
 // TODO: maybe use more complete crate: `smart_leds` instead of `smart_leds_trait`
+#[allow(clippy::identity_op)]
 impl SmartLedsWrite for Lights {
   type Color = smart_leds_trait::RGBA<u8>;
   type Error = ();

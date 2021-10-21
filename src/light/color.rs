@@ -1,23 +1,25 @@
+use piclib::{nl, FixNorm, ONE, ZERO};
+
 pub type RawColor = u32;
 pub type RawChannel = u8;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Color {
-  pub r: f32,
-  pub g: f32,
-  pub b: f32,
-  pub w: f32,
+  pub r: FixNorm,
+  pub g: FixNorm,
+  pub b: FixNorm,
+  pub w: FixNorm,
 }
 
 impl Color {
-  pub const fn new(r: f32, g: f32, b: f32, w: f32) -> Self {
+  pub const fn new(r: FixNorm, g: FixNorm, b: FixNorm, w: FixNorm) -> Self {
     Self { r, g, b, w }
   }
 
-  pub const fn into_channel_array(self) -> [f32; 4] {
+  pub const fn into_channel_array(self) -> [FixNorm; 4] {
     [self.r, self.g, self.b, self.w]
   }
-  pub const fn from_channel_array(channels: [f32; 4]) -> Self {
+  pub const fn from_channel_array(channels: [FixNorm; 4]) -> Self {
     Self::new(channels[0], channels[1], channels[2], channels[3])
   }
 
@@ -35,44 +37,44 @@ impl Color {
     Self::from_u8_channel_array(unpack(value))
   }
 
-  pub fn from_hsv(h: f32, s: f32, v: f32) -> Self {
-    let hsv = palette::Hsv::new(h * 360.0, s, v);
-    let rgb: palette::rgb::Rgb = palette::IntoColor::into_color(hsv);
-    // TODO: necessary?
-    let rgb = rgb.into_linear();
-    let comps = rgb.into_components();
-    Self::new(comps.0, comps.1, comps.2, 0.0)
+  pub fn from_hsv(_h: FixNorm, _s: FixNorm, _v: FixNorm) -> Self {
+    unimplemented!()
+    //let hsv = palette::Hsv::new(h * 360.0, s, v);
+    //let rgb: palette::rgb::Rgb = palette::IntoColor::into_color(hsv);
+    //// TODO: necessary?
+    //let rgb = rgb.into_linear();
+    //let comps = rgb.into_components();
+    //Self::new(comps.0, comps.1, comps.2, 0.0)
   }
 
-  pub fn into_hsv(self) -> [f32; 3] {
-    // TODO: necessary conversion?
-    //let rgb = palette::rgb::LinSrgb::new(self.r, self.g, self.b);
-    let rgb = palette::rgb::Rgb::new(self.r, self.g, self.b);
-    let rgb: palette::Hsv = palette::IntoColor::into_color(rgb);
-    let comps = rgb.into_components();
-    [comps.0.to_positive_degrees() / 360.0, comps.1, comps.2]
+  pub fn into_hsv(self) -> [FixNorm; 3] {
+    unimplemented!()
+    //// TODO: necessary conversion?
+    ////let rgb = palette::rgb::LinSrgb::new(self.r, self.g, self.b);
+    //let rgb = palette::rgb::Rgb::new(self.r, self.g, self.b);
+    //let rgb: palette::Hsv = palette::IntoColor::into_color(rgb);
+    //let comps = rgb.into_components();
+    //[comps.0.to_positive_degrees() / 360.0, comps.1, comps.2]
   }
 }
 
 /// Color definitions
 impl Color {
-  pub const RED: Self = Self::new(1.0, 0.0, 0.0, 0.0);
-  pub const GREEN: Self = Self::new(0.0, 1.0, 0.0, 0.0);
-  pub const BLUE: Self = Self::new(0.0, 0.0, 1.0, 0.0);
-  pub const WHITE: Self = Self::new(0.0, 0.0, 0.0, 1.0);
+  pub const RED: Self = Self::new(ONE, ZERO, ZERO, ZERO);
+  pub const GREEN: Self = Self::new(ZERO, ONE, ZERO, ZERO);
+  pub const BLUE: Self = Self::new(ZERO, ZERO, ONE, ZERO);
+  pub const WHITE: Self = Self::new(ZERO, ZERO, ZERO, ONE);
 
-  pub const ALL: Self = Self::new(1.0, 1.0, 1.0, 1.0);
-  pub const NONE: Self = Self::new(0.0, 0.0, 0.0, 0.0);
+  pub const ALL: Self = Self::new(ONE, ONE, ONE, ONE);
+  pub const NONE: Self = Self::new(ZERO, ZERO, ZERO, ZERO);
 
-  pub const YELLOW: Self = Self::RED.mix_rgbw(Self::GREEN);
-  pub const MAGENTA: Self = Self::RED.mix_rgbw(Self::BLUE);
-  pub const CYAN: Self = Self::GREEN.mix_rgbw(Self::BLUE);
-
-  pub const ORANGE: Self = Self::RED.mix_rgbw(Self::YELLOW);
+  pub const YELLOW: Self = Self::new(ONE, ONE, ZERO, ZERO);
+  pub const MAGENTA: Self = Self::new(ONE, ZERO, ONE, ZERO);
+  pub const CYAN: Self = Self::new(ZERO, ONE, ONE, ZERO);
 }
 
 impl core::ops::Index<usize> for Color {
-  type Output = f32;
+  type Output = FixNorm;
 
   fn index(&self, index: usize) -> &Self::Output {
     match index {
@@ -96,21 +98,21 @@ impl core::ops::IndexMut<usize> for Color {
   }
 }
 
-pub fn normalize([r, g, b, w]: [u8; 4]) -> [f32; 4] {
+pub fn normalize([r, g, b, w]: [u8; 4]) -> [FixNorm; 4] {
   [
-    r as f32 / 255.0,
-    g as f32 / 255.0,
-    b as f32 / 255.0,
-    w as f32 / 255.0,
+    nl!(r) / nl!(255u8),
+    nl!(g) / nl!(255u8),
+    nl!(b) / nl!(255u8),
+    nl!(w) / nl!(255u8),
   ]
 }
 
-pub fn denormalize([r, g, b, w]: [f32; 4]) -> [u8; 4] {
+pub fn denormalize([r, g, b, w]: [FixNorm; 4]) -> [u8; 4] {
   [
-    (r * 255.0) as u8,
-    (g * 255.0) as u8,
-    (b * 255.0) as u8,
-    (w * 255.0) as u8,
+    (r * nl!(255u8)).to_num(),
+    (g * nl!(255u8)).to_num(),
+    (b * nl!(255u8)).to_num(),
+    (w * nl!(255u8)).to_num(),
   ]
 }
 
@@ -136,14 +138,15 @@ pub fn unpack(c: u32) -> [u8; 4] {
 }
 
 impl rand::distributions::Distribution<Color> for rand::distributions::Standard {
-  fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Color {
-    let hue = rng.gen::<f32>();
-    Color::from_hsv(hue, 1.0, 1.0)
+  fn sample<R: rand::Rng + ?Sized>(&self, _rng: &mut R) -> Color {
+    unimplemented!()
+    //let hue = rng.gen::<FixNorm>();
+    //Color::from_hsv(hue, ONE, ONE)
   }
 }
 
 impl Color {
-  pub fn scale_rgbw(self, scalar: f32) -> Self {
+  pub fn scale_rgbw(self, scalar: FixNorm) -> Self {
     Color::new(
       scalar * self.r,
       scalar * self.g,
@@ -161,33 +164,33 @@ impl Color {
     )
   }
 
-  pub const fn mix_rgbw(self, other: Self) -> Self {
-    self.gradient_rgbw(other, 0.5)
+  pub fn mix_rgbw(self, other: Self) -> Self {
+    self.gradient_rgbw(other, ONE / nl!(2))
   }
 
   pub fn mix_hsv(self, other: Self) -> Self {
     let this = self.into_hsv();
     let other = other.into_hsv();
-    let h = (this[0] + other[0]) / 2.0;
-    let s = (this[1] + other[1]) / 2.0;
-    let v = (this[2] + other[2]) / 2.0;
+    let h = (this[0] + other[0]) / nl!(2);
+    let s = (this[1] + other[1]) / nl!(2);
+    let v = (this[2] + other[2]) / nl!(2);
     Color::from_hsv(h, s, v)
   }
 
-  pub const fn gradient_rgbw(self, other: Self, t: f32) -> Self {
+  pub fn gradient_rgbw(self, other: Self, t: FixNorm) -> Self {
     Color::new(
-      (1.0 - t) * self.r + t * other.r,
-      (1.0 - t) * self.g + t * other.g,
-      (1.0 - t) * self.b + t * other.b,
-      (1.0 - t) * self.w + t * other.w,
+      (ONE - t) * self.r + t * other.r,
+      (ONE - t) * self.g + t * other.g,
+      (ONE - t) * self.b + t * other.b,
+      (ONE - t) * self.w + t * other.w,
     )
   }
-  pub fn gradient_hsv(self, other: Self, t: f32) -> Self {
+  pub fn gradient_hsv(self, other: Self, t: FixNorm) -> Self {
     let this = self.into_hsv();
     Color::from_hsv(
-      (1.0 - t) * this[0] + t * other.r,
-      (1.0 - t) * this[1] + t * other.g,
-      (1.0 - t) * this[2] + t * other.b,
+      (ONE - t) * this[0] + t * other.r,
+      (ONE - t) * this[1] + t * other.g,
+      (ONE - t) * this[2] + t * other.b,
     )
   }
 }

@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 #![feature(default_alloc_error_handler)]
-#![feature(const_fn_floating_point_arithmetic)]
 
 #[allow(unused_imports)]
 #[macro_use]
@@ -61,9 +60,6 @@ impl App {
     let mut p = pac::Peripherals::take().unwrap();
     let cp = pac::CorePeripherals::take().unwrap();
 
-    let vec = vec![0, 1, 2, 4];
-    //cortex_m_semihosting::hprintln!("{:?}", vec).unwrap();
-
     let mut watchdog = Watchdog::new(p.WATCHDOG);
     let clocks = hal::clocks::init_clocks_and_plls(
       XOSC_CRYSTAL_FREQ,
@@ -106,15 +102,14 @@ impl App {
     let _uart_tx_pin = pins.gpio0.into_mode::<hal::gpio::FunctionUart>();
     let _uart_rx_pin = pins.gpio1.into_mode::<hal::gpio::FunctionUart>();
 
-    let uart = UartPeripheral::enable(
-      p.UART0,
-      &mut p.RESETS,
-      hal::uart::common_configs::_115200_8_N_1,
-      clocks.peripheral_clock.into(),
-    )
-    .unwrap();
+    let uart = UartPeripheral::new(p.UART0, &mut p.RESETS)
+      .enable(
+        hal::uart::common_configs::_115200_8_N_1,
+        clocks.peripheral_clock.into(),
+      )
+      .unwrap();
 
-    let stack = vec![Box::new(show::DemoShow::default()) as Box<dyn Show>];
+    let stack = vec![Box::new(show::QuickShow::default()) as Box<dyn Show>];
 
     Self {
       _uart: uart,
