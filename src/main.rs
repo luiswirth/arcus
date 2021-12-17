@@ -109,7 +109,7 @@ impl App {
       )
       .unwrap();
 
-    let stack = vec![Box::new(show::QuickShow::default()) as Box<dyn Show>];
+    let stack = vec![Box::new(show::DemoShow::default()) as Box<dyn Show>];
 
     Self {
       _uart: uart,

@@ -49,7 +49,6 @@ impl Lights {
     let mut assembler = pio::Assembler::new_with_side_set(side_set);
 
     // configure pin as output
-    // TODO: is this really necessary for side_set?
     assembler.set_with_side_set(pio::SetDestination::PINDIRS, 1, 0);
 
     let mut wrap_target = assembler.label();
@@ -70,13 +69,7 @@ impl Lights {
     assembler.jmp_with_delay_and_side_set(pio::JmpCondition::Always, &mut bitloop, T2 - 1, 1);
     assembler.bind(&mut do_zero);
     // Pseudoinstruction: NOP
-    assembler.mov_with_delay_and_side_set(
-      pio::MovDestination::Y,
-      pio::MovOperation::None,
-      pio::MovSource::Y,
-      T2 - 1,
-      0,
-    );
+    assembler.nop_with_delay_and_side_set(T2 - 1, 0);
     assembler.bind(&mut wrap_source);
 
     let program = assembler.assemble_with_wrap(wrap_source, wrap_target);
@@ -110,6 +103,18 @@ impl Lights {
   fn force_write(&mut self, word: u32) {
     while !self.tx.write(word) {}
   }
+
+  fn write_iter(&mut self, words: impl Iterator<Item = u32>) {
+    self.count_down.with_dependent_mut(|_, c| {
+      // TODO: why does this need to wait so long. 60us should suffice.
+      c.start(600.microseconds());
+      let _ = nb::block!(c.wait());
+    });
+
+    for word in words {
+      self.force_write(word);
+    }
+  }
 }
 
 // TODO: maybe use more complete crate: `smart_leds` instead of `smart_leds_trait`
@@ -124,6 +129,7 @@ impl SmartLedsWrite for Lights {
     I: Into<Self::Color>,
   {
     self.count_down.with_dependent_mut(|_, c| {
+      c.start(60.microseconds());
       let _ = nb::block!(c.wait());
     });
 
@@ -139,9 +145,6 @@ impl SmartLedsWrite for Lights {
       self.force_write(grbw);
     }
 
-    self.count_down.with_dependent_mut(|_, c| {
-      c.start(60.microseconds());
-    });
     Ok(())
   }
 }

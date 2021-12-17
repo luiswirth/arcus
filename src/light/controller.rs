@@ -63,9 +63,10 @@ impl<'a> MemoryController<'a> for U32MemoryController<'a> {
   }
 
   fn display(&mut self) {
-    for c in &self.memory.0 {
-      self.lights.force_write(*c);
-    }
+    self.lights.write_iter(self.memory.0.into_iter());
+    //for c in &self.memory.0 {
+    //  self.lights.force_write(*c);
+    //}
   }
 }
 

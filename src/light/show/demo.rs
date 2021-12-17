@@ -31,7 +31,7 @@ pub enum DemoState {
 }
 
 impl Show for DemoShow {
-  fn update(&mut self, lights: &mut Lights, utils: &mut Utils) -> State {
+  fn update(&mut self, lights: &mut Lights, _utils: &mut Utils) -> State {
     const N: usize = Lights::N;
     let mut ctrl = U32MemoryController::new(lights, &mut self.memory);
 
@@ -46,7 +46,7 @@ impl Show for DemoShow {
         color[c] = ONE;
         ctrl.set(l, color);
         ctrl.display();
-        utils.delay_ms(40);
+        //utils.delay_ms(40);
         l += 1;
         if l == N {
           l = 0;
@@ -63,7 +63,7 @@ impl Show for DemoShow {
         let color = Color::new(ONE, ONE, ONE, ZERO);
         ctrl.set(l, color);
         ctrl.display();
-        utils.delay_ms(40);
+        //utils.delay_ms(40);
         l += 1;
         if l == N {
           l = 0;
@@ -77,7 +77,7 @@ impl Show for DemoShow {
         let color = Color::new(ONE, ONE, ONE, ONE);
         ctrl.set(l, color);
         ctrl.display();
-        utils.delay_ms(40);
+        //utils.delay_ms(40);
         l += 1;
         if l == N {
           State::Finished
