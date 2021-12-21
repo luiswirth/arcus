@@ -40,6 +40,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "arcus"
+version = "0.1.0"
+dependencies = [
+ "alloc-cortex-m",
+ "arrayvec",
+ "cordic",
+ "cortex-m 0.7.3",
+ "cortex-m-rt",
+ "cortex-m-semihosting",
+ "display-interface",
+ "embedded-graphics",
+ "embedded-hal",
+ "embedded-time",
+ "fixed",
+ "heapless",
+ "nb 1.0.0",
+ "num-traits",
+ "palette",
+ "panic-semihosting",
+ "pico_explorer",
+ "pio",
+ "rand",
+ "rp2040-boot2",
+ "self_cell",
+ "smart-leds-trait",
+]
+
+[[package]]
 name = "arrayvec"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -510,9 +538,9 @@ dependencies = [
 
 [[package]]
 name = "num_enum"
-version = "0.5.4"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f9bd055fb730c4f8f4f57d45d35cd6b3f0980535b056dc7ff119cee6a66ed6f"
+checksum = "085fe377a4b2805c0fbc09484415ec261174614b7f080b0e0d520456ac421a67"
 dependencies = [
  "derivative",
  "num_enum_derive",
@@ -520,9 +548,9 @@ dependencies = [
 
 [[package]]
 name = "num_enum_derive"
-version = "0.5.4"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "486ea01961c4a818096de679a8b740b26d9033146ac5291b1c98557658f8cdd9"
+checksum = "5249369707a1e07b39f78d98c8f34e00aca7dcb053812fdbb5ad7be82c1bba38"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -571,7 +599,7 @@ checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
 [[package]]
 name = "pico_explorer"
 version = "0.1.0"
-source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#53d9dbdf524a63ae78d06fd93e25de73aa005015"
+source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#c83a31ab2b52b7af55e045fd570aeab3f8c31da7"
 dependencies = [
  "cortex-m 0.7.3",
  "cortex-m-rt",
@@ -582,34 +610,6 @@ dependencies = [
  "rp2040-boot2",
  "rp2040-hal",
  "st7789",
-]
-
-[[package]]
-name = "picot-rs"
-version = "0.1.0"
-dependencies = [
- "alloc-cortex-m",
- "arrayvec",
- "cordic",
- "cortex-m 0.7.3",
- "cortex-m-rt",
- "cortex-m-semihosting",
- "display-interface",
- "embedded-graphics",
- "embedded-hal",
- "embedded-time",
- "fixed",
- "heapless",
- "nb 1.0.0",
- "num-traits",
- "palette",
- "panic-semihosting",
- "pico_explorer",
- "pio",
- "rand",
- "rp2040-boot2",
- "self_cell",
- "smart-leds-trait",
 ]
 
 [[package]]
@@ -675,9 +675,9 @@ checksum = "f497285884f3fcff424ffc933e56d7cbca511def0c9831a7f9b5f6153e3cc89b"
 
 [[package]]
 name = "rgb"
-version = "0.8.30"
+version = "0.8.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08a9852b34c4628f8ad76797a933577059163651ec5a7dace462adc365bee66c"
+checksum = "9a374af9a0e5fdcdd98c1c7b64f05004f9ea2555b6c75f211daa81268a3c50f1"
 dependencies = [
  "bytemuck",
 ]
@@ -715,7 +715,7 @@ dependencies = [
 [[package]]
 name = "rp2040-hal"
 version = "0.3.0"
-source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#53d9dbdf524a63ae78d06fd93e25de73aa005015"
+source = "git+https://github.com/rp-rs/rp-hal.git?branch=main#c83a31ab2b52b7af55e045fd570aeab3f8c31da7"
 dependencies = [
  "cortex-m 0.7.3",
  "critical-section",

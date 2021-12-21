@@ -1,14 +1,14 @@
 [package]
-name = "picot-rs"
+name = "arcus"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "piclib"
+name = "arclib"
 path = "src/lib.rs"
 
 [[bin]]
-name = "picot"
+name = "arcus"
 path = "src/main.rs"
 
 [dependencies]

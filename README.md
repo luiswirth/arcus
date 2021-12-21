@@ -1,4 +1,4 @@
-# picot-rs
+# arcus
 
 ## Run
 Running requires the rp2040-picoprobe fork of openocd

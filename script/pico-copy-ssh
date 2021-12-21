@@ -1,0 +1,3 @@
+#!/bin/sh
+
+scp $1 pi@192.168.1.102:arcus-bin/$1.elf

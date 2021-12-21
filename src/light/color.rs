@@ -1,4 +1,4 @@
-use piclib::{nl, FixNorm, ONE, ZERO};
+use arclib::{nl, FixNorm, ONE, ZERO};
 
 pub type RawColor = u32;
 pub type RawChannel = u8;
@@ -37,14 +37,36 @@ impl Color {
     Self::from_u8_channel_array(unpack(value))
   }
 
-  pub fn from_hsv(_h: FixNorm, _s: FixNorm, _v: FixNorm) -> Self {
-    unimplemented!()
+  #[allow(clippy::zero_prefixed_literal)]
+  pub fn from_hsv(mut h: FixNorm, s: FixNorm, v: FixNorm) -> Self {
+    h *= nl!(360u32);
+    let c = v * s;
+    let x = c * (ONE - ((h / nl!(60u32)) % nl!(2u32) - ONE));
+    let m = v - c;
+
+    let c0 = nl!(000u32)..=nl!(060u32);
+    let c1 = nl!(060u32)..=nl!(120u32);
+    let c2 = nl!(120u32)..=nl!(180u32);
+    let c3 = nl!(180u32)..=nl!(240u32);
+    let c4 = nl!(240u32)..=nl!(300u32);
+    let c5 = nl!(300u32)..=nl!(360u32);
+
+    let [r, g, b]: [FixNorm; 3] = match h {
+      c if c0.contains(&c) => [c, x, ZERO],
+      c if c1.contains(&c) => [x, c, ZERO],
+      c if c2.contains(&c) => [ZERO, c, x],
+      c if c3.contains(&c) => [ZERO, x, c],
+      c if c4.contains(&c) => [x, ZERO, c],
+      c if c5.contains(&c) => [c, ZERO, x],
+      _ => [c, x, ZERO],
+    };
+    Self::new(r + m, g + m, b + m, ZERO)
     //let hsv = palette::Hsv::new(h * 360.0, s, v);
-    //let rgb: palette::rgb::Rgb = palette::IntoColor::into_color(hsv);
+    //let rgb: palette::rgb::Rgb = palette::FromColor::from_color(hsv);
     //// TODO: necessary?
     //let rgb = rgb.into_linear();
     //let comps = rgb.into_components();
-    //Self::new(comps.0, comps.1, comps.2, 0.0)
+    //Self::new(nl!(comps.0), nl!(comps.1), nl!(comps.2), nl!(0u32))
   }
 
   pub fn into_hsv(self) -> [FixNorm; 3] {
@@ -168,14 +190,14 @@ impl Color {
     self.gradient_rgbw(other, ONE / nl!(2))
   }
 
-  pub fn mix_hsv(self, other: Self) -> Self {
-    let this = self.into_hsv();
-    let other = other.into_hsv();
-    let h = (this[0] + other[0]) / nl!(2);
-    let s = (this[1] + other[1]) / nl!(2);
-    let v = (this[2] + other[2]) / nl!(2);
-    Color::from_hsv(h, s, v)
-  }
+  //pub fn mix_hsv(self, other: Self) -> Self {
+  //  let this = self.into_hsv();
+  //  let other = other.into_hsv();
+  //  let h = (this[0] + other[0]) / nl!(2);
+  //  let s = (this[1] + other[1]) / nl!(2);
+  //  let v = (this[2] + other[2]) / nl!(2);
+  //  Color::from_hsv(h, s, v)
+  //}
 
   pub fn gradient_rgbw(self, other: Self, t: FixNorm) -> Self {
     Color::new(
@@ -185,12 +207,12 @@ impl Color {
       (ONE - t) * self.w + t * other.w,
     )
   }
-  pub fn gradient_hsv(self, other: Self, t: FixNorm) -> Self {
-    let this = self.into_hsv();
-    Color::from_hsv(
-      (ONE - t) * this[0] + t * other.r,
-      (ONE - t) * this[1] + t * other.g,
-      (ONE - t) * this[2] + t * other.b,
-    )
-  }
+  //pub fn gradient_hsv(self, other: Self, t: FixNorm) -> Self {
+  //  let this = self.into_hsv();
+  //  Color::from_hsv(
+  //    (ONE - t) * this[0] + t * other.r,
+  //    (ONE - t) * this[1] + t * other.g,
+  //    (ONE - t) * this[2] + t * other.b,
+  //  )
+  //}
 }

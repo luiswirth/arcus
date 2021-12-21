@@ -1,4 +1,4 @@
-use piclib::{ONE, ZERO};
+use arclib::{ONE, ZERO};
 
 use crate::light::{
   color::Color,

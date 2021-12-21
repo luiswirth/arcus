@@ -1,0 +1,6 @@
+#!/bin/sh
+
+sudo mount -o uid=1000,gid=1000 /dev/pico /mnt/pico
+elf2uf2-rs $1
+cp $1.uf2 /mnt/pico
+sudo umount /mnt/pico

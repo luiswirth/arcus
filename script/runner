@@ -1,0 +1,4 @@
+#/bin/sh
+
+pico-copy-ssh $1
+pico-load-ssh $1

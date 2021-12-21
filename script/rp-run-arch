@@ -1,6 +1,0 @@
-#!/bin/bash
-
-bin_path=$1
-
-scp $bin_path pi@192.168.1.102:picot/bin/picot-rs.elf
-ssh pi@192.168.1.102 -f 'picot/picot-rs/script/rp-run'
