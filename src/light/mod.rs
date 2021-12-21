@@ -14,8 +14,6 @@ use pico_explorer::{
   },
   pac,
 };
-use smart_leds_trait::SmartLedsWrite;
-
 use self_cell::self_cell;
 
 use self::color::Color;
@@ -114,38 +112,6 @@ impl Lights {
     for word in words {
       self.force_write(word);
     }
-  }
-}
-
-// TODO: maybe use more complete crate: `smart_leds` instead of `smart_leds_trait`
-#[allow(clippy::identity_op)]
-impl SmartLedsWrite for Lights {
-  type Color = smart_leds_trait::RGBA<u8>;
-  type Error = ();
-
-  fn write<T, I>(&mut self, iterator: T) -> Result<(), Self::Error>
-  where
-    T: Iterator<Item = I>,
-    I: Into<Self::Color>,
-  {
-    self.count_down.with_dependent_mut(|_, c| {
-      c.start(60.microseconds());
-      let _ = nb::block!(c.wait());
-    });
-
-    for color in iterator {
-      let color: Self::Color = color.into();
-
-      let mut grbw = 0u32;
-      grbw |= (color.g as u32) << 24;
-      grbw |= (color.r as u32) << 16;
-      grbw |= (color.b as u32) << 8;
-      grbw |= (color.a as u32) << 0;
-
-      self.force_write(grbw);
-    }
-
-    Ok(())
   }
 }
 
