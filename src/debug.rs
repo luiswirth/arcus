@@ -6,7 +6,7 @@ use embedded_graphics::{
   prelude::*,
   text::{Alignment, Baseline, LineHeight, Text, TextStyleBuilder},
 };
-use pico_explorer::Screen;
+use pico::Screen;
 
 pub type ArrayString = arrayvec::ArrayString<{ NCHARS as usize }>;
 

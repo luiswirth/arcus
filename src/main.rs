@@ -19,7 +19,7 @@ use embedded_time::fixed_point::FixedPoint;
 use light::{show::Show, Lights, Utils};
 //use panic_semihosting as _;
 
-use pico_explorer::{
+use pico::{
   hal::{self, adc::Adc, clocks::ClockSource, sio::Sio, uart::UartPeripheral, watchdog::Watchdog},
   pac, PicoExplorer, XOSC_CRYSTAL_FREQ,
 };

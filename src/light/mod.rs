@@ -5,7 +5,7 @@ pub mod show;
 use cortex_m::delay::Delay;
 use embedded_hal::prelude::*;
 use embedded_time::duration::Extensions;
-use pico_explorer::{
+use pico::{
   hal::{
     self, gpio,
     pac::{PIO0, TIMER},
