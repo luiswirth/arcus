@@ -168,6 +168,7 @@ impl rand::distributions::Distribution<Color> for rand::distributions::Standard 
 }
 
 impl Color {
+  #[must_use]
   pub fn scale_rgbw(self, scalar: FixNorm) -> Self {
     Color::new(
       scalar * self.r,
@@ -177,6 +178,7 @@ impl Color {
     )
   }
 
+  #[must_use]
   pub fn add_rgbw(self, other: Self) -> Self {
     Color::new(
       self.r + other.r,
@@ -186,6 +188,7 @@ impl Color {
     )
   }
 
+  #[must_use]
   pub fn mix_rgbw(self, other: Self) -> Self {
     self.gradient_rgbw(other, ONE / nl!(2))
   }
@@ -199,6 +202,7 @@ impl Color {
   //  Color::from_hsv(h, s, v)
   //}
 
+  #[must_use]
   pub fn gradient_rgbw(self, other: Self, t: FixNorm) -> Self {
     Color::new(
       (ONE - t) * self.r + t * other.r,
