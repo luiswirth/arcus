@@ -1,3 +1,8 @@
 #!/bin/sh
 
-scp $1 pi@192.168.1.102:arcus-bin/$1.elf
+fullfile=$1
+filename=$(basename -- "$fullfile")
+extension="${filename##*.}"
+filename="${filename%.*}"
+
+scp $fullfile pi@192.168.1.102:arcus-bin/$filename.elf

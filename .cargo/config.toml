@@ -1,5 +1,5 @@
 [target.'cfg(all(target_arch = "arm", target_os = "none"))']
-runner = "./script/rp-run-arch"
+runner = "script/runner"
 #runner = "./script/fs-run"
 #runner = "arm-none-eabi-gdb -q -x openocd.gdb"
 

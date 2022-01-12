@@ -1,4 +1,9 @@
 #/bin/sh
 
-pico-copy-ssh $1
-pico-load-ssh $1
+fullfile=$1
+filename=$(basename -- "$fullfile")
+extension="${filename##*.}"
+filename="${filename%.*}"
+
+source ./script/pico-copy-ssh $fullfile
+source ./script/pico-load-ssh $filename
