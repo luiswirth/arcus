@@ -1,6 +1,7 @@
 use super::{Lights, Utils};
 
 pub mod demo;
+pub mod uniform;
 //pub mod firefly;
 //pub mod gradient;
 //pub mod lightning;
@@ -15,6 +16,7 @@ pub use demo::DemoShow;
 //pub use off::OffShow;
 //pub use pendulum::PendulumShow;
 pub use quick::QuickShow;
+pub use uniform::UniformShow;
 
 pub enum State {
   Running,

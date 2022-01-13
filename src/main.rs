@@ -6,6 +6,7 @@
 #[macro_use]
 extern crate alloc;
 
+pub mod control;
 pub mod debug;
 pub mod light;
 
@@ -24,7 +25,13 @@ use pico::{
   pac, PicoExplorer, XOSC_CRYSTAL_FREQ,
 };
 
+use control::IrRemote;
 use light::show;
+
+use self::{
+  control::RemoteKey,
+  light::{color::Color, show::UniformShow},
+};
 
 #[link_section = ".boot_loader"]
 #[used]
@@ -42,6 +49,7 @@ static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
 struct App {
   lights: Lights,
+  remote: IrRemote,
   _uart: UartPeripheral<hal::uart::Enabled, pac::UART0>,
   utils: Utils,
 
@@ -109,11 +117,15 @@ impl App {
       )
       .unwrap();
 
-    let stack = vec![Box::new(show::QuickShow::default()) as Box<dyn Show>];
+    let stack: Vec<Box<dyn Show>> = vec![Box::new(show::QuickShow::default())];
+
+    let ir_pin = pins.gpio3.into_pull_down_input();
+    let remote = IrRemote::new(ir_pin);
 
     Self {
       _uart: uart,
       lights,
+      remote,
       utils,
 
       stack,
@@ -122,6 +134,13 @@ impl App {
 
   fn run(mut self) -> ! {
     loop {
+      match self.remote.get_key() {
+        Some(RemoteKey::Num0) => self.stack.push(Box::new(UniformShow::new(Color::BLUE))),
+        Some(RemoteKey::Num1) => self.stack.push(Box::new(UniformShow::new(Color::WHITE))),
+        Some(RemoteKey::Num2) => self.stack.push(Box::new(UniformShow::new(Color::WHITE))),
+        _ => {}
+      }
+
       if let Some(show) = self.stack.last_mut() {
         let state = Show::update(show.as_mut(), &mut self.lights, &mut self.utils);
         if matches!(state, show::State::Finished) {

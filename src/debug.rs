@@ -1,5 +1,3 @@
-use core::{fmt::Write, panic::PanicInfo};
-
 use embedded_graphics::{
   mono_font::{MonoFont, MonoTextStyleBuilder},
   pixelcolor::Rgb565,
@@ -86,6 +84,7 @@ pub fn draw_text(text: &str) {
     .unwrap();
 }
 
+use core::{fmt::Write, panic::PanicInfo};
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
   let mut buf = ArrayString::new();
