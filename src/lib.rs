@@ -3,7 +3,7 @@
 pub type FixNorm = fixed::FixedU32<fixed::types::extra::U16>;
 pub const ZERO: FixNorm = FixNorm::ZERO;
 // TODO: check if really one
-pub const ONE: FixNorm = FixNorm::MAX;
+pub const ONE: FixNorm = FixNorm::ONE;
 
 #[macro_export]
 macro_rules! nl {

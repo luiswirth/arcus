@@ -6,6 +6,8 @@
 #[macro_use]
 extern crate alloc;
 
+//extern crate panic_itm;
+
 pub mod control;
 pub mod debug;
 pub mod light;
@@ -18,18 +20,16 @@ use alloc::{boxed::Box, vec::Vec};
 
 use embedded_time::fixed_point::FixedPoint;
 use light::{show::Show, Lights, Utils};
-//use panic_semihosting as _;
 
 use pico::{
   hal::{self, adc::Adc, clocks::ClockSource, sio::Sio, uart::UartPeripheral, watchdog::Watchdog},
   pac, PicoExplorer, XOSC_CRYSTAL_FREQ,
 };
 
-use control::IrRemote;
 use light::show;
 
 use self::{
-  control::RemoteKey,
+  debug::init_debug,
   light::{color::Color, show::UniformShow},
 };
 
@@ -49,8 +49,6 @@ static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
 struct App {
   lights: Lights,
-  remote: IrRemote,
-  _uart: UartPeripheral<hal::uart::Enabled, pac::UART0>,
   utils: Utils,
 
   stack: Vec<Box<dyn Show>>,
@@ -85,7 +83,7 @@ impl App {
     let adc = Adc::new(p.ADC, &mut p.RESETS);
     let sio = Sio::new(p.SIO);
 
-    let (explorer, pins) = PicoExplorer::new(
+    let (_explorer, pins) = PicoExplorer::new(
       p.IO_BANK0,
       p.PADS_BANK0,
       sio.gpio_bank0,
@@ -94,8 +92,6 @@ impl App {
       &mut p.RESETS,
       &mut delay,
     );
-
-    debug::init_debug(explorer.screen);
 
     let lights = Lights::init(
       p.PIO0,
@@ -117,15 +113,14 @@ impl App {
       )
       .unwrap();
 
-    let stack: Vec<Box<dyn Show>> = vec![Box::new(show::QuickShow::default())];
+    uart.write_full_blocking(b"\n\nhello\n");
 
-    let ir_pin = pins.gpio3.into_pull_down_input();
-    let remote = IrRemote::new(ir_pin);
+    init_debug(uart);
+
+    let stack: Vec<Box<dyn Show>> = vec![Box::new(UniformShow::new(Color::WHITE))];
 
     Self {
-      _uart: uart,
       lights,
-      remote,
       utils,
 
       stack,
@@ -134,13 +129,6 @@ impl App {
 
   fn run(mut self) -> ! {
     loop {
-      match self.remote.get_key() {
-        Some(RemoteKey::Num0) => self.stack.push(Box::new(UniformShow::new(Color::BLUE))),
-        Some(RemoteKey::Num1) => self.stack.push(Box::new(UniformShow::new(Color::WHITE))),
-        Some(RemoteKey::Num2) => self.stack.push(Box::new(UniformShow::new(Color::WHITE))),
-        _ => {}
-      }
-
       if let Some(show) = self.stack.last_mut() {
         let state = Show::update(show.as_mut(), &mut self.lights, &mut self.utils);
         if matches!(state, show::State::Finished) {

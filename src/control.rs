@@ -1,5 +1,5 @@
 use embedded_hal::digital::v2::InputPin;
-use pico::hal::gpio::{self, Floating, Input, PullDown};
+use pico::hal::gpio::{self, Input, PullDown};
 
 pub enum RemoteKey {
   ChannelMinus,
