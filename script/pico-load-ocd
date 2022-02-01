@@ -1,6 +1,6 @@
 #!/bin/sh
 
 openocd\
-  -f interface/raspberrypi-swd.cfg\
+  -f interface/picoprobe.cfg\
   -f target/rp2040.cfg\
-  -c "program arcus-bin/$1.elf verify reset exit"
+  -c "program $1 verify reset exit"
