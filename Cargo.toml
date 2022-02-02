@@ -35,3 +35,5 @@ palette = { version = "0.6.0", default-features = false, features = [ "libm" ] }
 self_cell = "0.10.2"
 fixed = "1.11.0"
 cordic = "0.1.5"
+panic-semihosting = "0.5.6"
+cortex-m-semihosting = "0.3.7"

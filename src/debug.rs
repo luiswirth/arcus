@@ -4,11 +4,7 @@ use embedded_graphics::{
   prelude::*,
   text::{Alignment, Baseline, LineHeight, Text, TextStyleBuilder},
 };
-use pico::{
-  hal::uart::{Enabled, UartPeripheral},
-  pac::UART0,
-  Screen,
-};
+use pico::Screen;
 
 pub type ArrayString = arrayvec::ArrayString<{ NCHARS as usize }>;
 
@@ -16,8 +12,6 @@ pub const SCREEN_SIZE: u16 = 240;
 pub const SCREEN_SIZE2: usize = SCREEN_SIZE as usize * SCREEN_SIZE as usize;
 
 static mut SCREEN: Option<Screen> = None;
-
-static mut UART: Option<UartPeripheral<Enabled, UART0>> = None;
 
 #[allow(dead_code)]
 fn usage() {
@@ -35,19 +29,6 @@ pub fn screen<'a>() -> &'a Screen {
 }
 pub fn screen_mut<'a>() -> &'a mut Screen {
   unsafe { SCREEN.as_mut().unwrap() }
-}
-
-pub fn uart<'a>() -> &'a UartPeripheral<Enabled, UART0> {
-  unsafe { UART.as_ref().unwrap() }
-}
-pub fn uart_mut<'a>() -> &'a mut UartPeripheral<Enabled, UART0> {
-  unsafe { UART.as_mut().unwrap() }
-}
-
-pub fn init_debug(uart: UartPeripheral<Enabled, UART0>) {
-  unsafe {
-    UART = Some(uart);
-  }
 }
 
 const FONT: MonoFont = embedded_graphics::mono_font::ascii::FONT_4X6;
@@ -103,10 +84,9 @@ fn panic(info: &PanicInfo) -> ! {
   let mut buf = ArrayString::new();
   writeln!(buf, "{}", info).unwrap();
   buf = breakup(buf);
-  uart().write_full_blocking(buf.as_bytes());
 
-  //screen_mut().clear(Rgb565::RED).unwrap();
-  //draw_text(&buf);
+  screen_mut().clear(Rgb565::RED).unwrap();
+  draw_text(&buf);
 
   loop {}
 }

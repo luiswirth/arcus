@@ -6,31 +6,29 @@
 #[macro_use]
 extern crate alloc;
 
-//extern crate panic_itm;
+extern crate panic_semihosting;
 
 pub mod control;
-pub mod debug;
 pub mod light;
 
-use alloc_cortex_m::CortexMHeap;
 use cortex_m::delay::Delay;
 use cortex_m_rt::entry;
+use cortex_m_semihosting::hprintln;
 
+use alloc_cortex_m::CortexMHeap;
 use alloc::{boxed::Box, vec::Vec};
-
-use embedded_time::fixed_point::FixedPoint;
-use light::{show::Show, Lights, Utils};
 
 use pico::{
   hal::{self, adc::Adc, clocks::ClockSource, sio::Sio, uart::UartPeripheral, watchdog::Watchdog},
   pac, PicoExplorer, XOSC_CRYSTAL_FREQ,
 };
 
-use light::show;
+use embedded_time::fixed_point::FixedPoint;
 
-use self::{
-  debug::init_debug,
-  light::{color::Color, show::UniformShow},
+use light::{
+  color::Color,
+  show::{self, Show, UniformShow},
+  Lights, Utils,
 };
 
 #[link_section = ".boot_loader"]
@@ -39,13 +37,6 @@ pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER_W25Q080;
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
-
-/// Show Managment
-///
-/// - Light show stack
-///     this enables switching to informational shows or animations
-///     and then returning back to the original show.
-///
 
 struct App {
   lights: Lights,
@@ -105,17 +96,15 @@ impl App {
 
     let _uart_tx_pin = pins.gpio0.into_mode::<hal::gpio::FunctionUart>();
     let _uart_rx_pin = pins.gpio1.into_mode::<hal::gpio::FunctionUart>();
-
-    let uart = UartPeripheral::new(p.UART0, &mut p.RESETS)
+    let _uart = UartPeripheral::new(p.UART0, &mut p.RESETS)
       .enable(
         hal::uart::common_configs::_115200_8_N_1,
         clocks.peripheral_clock.into(),
       )
       .unwrap();
 
-    uart.write_full_blocking(b"\n\nhello\n");
-
-    init_debug(uart);
+    hprintln!("semihosting enabled").unwrap();
+    panic!("panicking over semihosting");
 
     let stack: Vec<Box<dyn Show>> = vec![Box::new(UniformShow::new(Color::WHITE))];
 

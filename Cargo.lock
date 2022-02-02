@@ -39,6 +39,7 @@ dependencies = [
  "cordic",
  "cortex-m",
  "cortex-m-rt",
+ "cortex-m-semihosting",
  "display-interface",
  "embedded-graphics",
  "embedded-hal",
@@ -48,6 +49,7 @@ dependencies = [
  "nb 1.0.0",
  "num-traits",
  "palette",
+ "panic-semihosting",
  "pimoroni-pico-explorer",
  "pio",
  "rand",
@@ -173,6 +175,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "cortex-m-semihosting"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bffa6c1454368a6aa4811ae60964c38e6996d397ff8095a8b9211b1c1f749bc"
+dependencies = [
+ "cortex-m",
 ]
 
 [[package]]
@@ -353,9 +364,9 @@ checksum = "822add9edb1860698b79522510da17bef885171f75aa395cff099d770c609c24"
 
 [[package]]
 name = "lock_api"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "712a4d093c9976e24e7dbca41db895dabcbac38eb5f4045393d17a95bdfb1109"
+checksum = "88943dd7ef4a2e5a4bfa2753aaab3013e34ce2533d1996fb18ef591e315e2b3b"
 dependencies = [
  "scopeguard",
 ]
@@ -492,6 +503,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "panic-semihosting"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c3d55dedd501dfd02514646e0af4d7016ce36bc12ae177ef52056989966a1eec"
+dependencies = [
+ "cortex-m",
+ "cortex-m-semihosting",
 ]
 
 [[package]]
