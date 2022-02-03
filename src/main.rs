@@ -13,10 +13,15 @@ pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER_W25Q080;
 mod app {
   use embedded_hal::digital::v2::OutputPin;
   use embedded_time::fixed_point::FixedPoint;
-  use rp_pico::hal::{
-    self,
-    clocks::{self, ClockSource},
-    gpio, Sio,
+  use rp_pico::{
+    hal::{
+      self,
+      clocks::{self, ClockSource},
+      gpio,
+      uart::{self, UartPeripheral},
+      Sio,
+    },
+    pac,
   };
   use systick_monotonic::*;
 
@@ -24,13 +29,14 @@ mod app {
   #[monotonic(binds = SysTick, default = true)]
   type MyMono = Systick<100>; // 100 Hz / 10 ms granularity
 
-  // Resources shared between tasks
+  // Resources shared between tasks.
   #[shared]
   struct Shared {
     led: gpio::Pin<gpio::pin::bank0::Gpio25, gpio::PushPullOutput>,
+    uart: UartPeripheral<uart::Enabled, pac::UART0>,
   }
 
-  // Local resources to specific tasks (cannot be shared)
+  // Local resources to specific tasks (cannot be shared).
   #[local]
   struct Local {}
 
@@ -64,12 +70,22 @@ mod app {
     let mut led = pins.led.into_push_pull_output();
     led.set_low().unwrap();
 
-    foo::spawn().unwrap();
+    let _uart_tx_pin = pins.gpio0.into_mode::<hal::gpio::FunctionUart>();
+    let _uart_rx_pin = pins.gpio1.into_mode::<hal::gpio::FunctionUart>();
+    let uart = UartPeripheral::new(c.device.UART0, &mut resets)
+      .enable(
+        hal::uart::common_configs::_115200_8_N_1,
+        clocks.peripheral_clock.into(),
+      )
+      .unwrap();
 
-    (Shared { led }, Local {}, init::Monotonics(mono))
+    led_blink::spawn().unwrap();
+    uart_hello::spawn().unwrap();
+
+    (Shared { led, uart }, Local {}, init::Monotonics(mono))
   }
 
-  // Background task, runs whenever no other tasks are running
+  // Background task, runs whenever no other tasks are running.
   #[idle]
   fn idle(_: idle::Context) -> ! {
     loop {
@@ -83,7 +99,7 @@ mod app {
         shared = [led],
         local = [tog: bool = true],
     )]
-  fn foo(mut c: foo::Context) {
+  fn led_blink(mut c: led_blink::Context) {
     if *c.local.tog {
       c.shared.led.lock(|l| l.set_high().unwrap());
     } else {
@@ -91,6 +107,19 @@ mod app {
     }
     *c.local.tog = !*c.local.tog;
 
-    foo::spawn_after(1.secs()).unwrap();
+    led_blink::spawn_after(1.secs()).unwrap();
+  }
+
+  // Software task, not bound to a hardware interrupt.
+  #[task(
+        priority = 2,
+        shared = [uart],
+    )]
+  fn uart_hello(mut c: uart_hello::Context) {
+    c.shared
+      .uart
+      .lock(|u| u.write_full_blocking(b"hello from uart\n"));
+
+    uart_hello::spawn_after(1.secs()).unwrap();
   }
 }
