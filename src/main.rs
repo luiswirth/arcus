@@ -8,7 +8,6 @@ extern crate alloc;
 
 extern crate panic_semihosting;
 
-pub mod control;
 pub mod light;
 
 use cortex_m::delay::Delay;
@@ -18,9 +17,9 @@ use cortex_m_semihosting::hprintln;
 use alloc_cortex_m::CortexMHeap;
 use alloc::{boxed::Box, vec::Vec};
 
-use pico::{
+use rp_pico::{
   hal::{self, adc::Adc, clocks::ClockSource, sio::Sio, uart::UartPeripheral, watchdog::Watchdog},
-  pac, PicoExplorer, XOSC_CRYSTAL_FREQ,
+  pac, XOSC_CRYSTAL_FREQ, Pins,
 };
 
 use embedded_time::fixed_point::FixedPoint;
@@ -69,19 +68,16 @@ impl App {
     )
     .ok()
     .unwrap();
-    let mut delay = Delay::new(cp.SYST, clocks.system_clock.get_freq().integer());
+    let delay = Delay::new(cp.SYST, clocks.system_clock.get_freq().integer());
 
-    let adc = Adc::new(p.ADC, &mut p.RESETS);
+    let _adc = Adc::new(p.ADC, &mut p.RESETS);
     let sio = Sio::new(p.SIO);
 
-    let (_explorer, pins) = PicoExplorer::new(
+    let pins = Pins::new(
       p.IO_BANK0,
       p.PADS_BANK0,
       sio.gpio_bank0,
-      p.SPI0,
-      adc,
       &mut p.RESETS,
-      &mut delay,
     );
 
     let lights = Lights::init(
@@ -104,7 +100,6 @@ impl App {
       .unwrap();
 
     hprintln!("semihosting enabled").unwrap();
-    panic!("panicking over semihosting");
 
     let stack: Vec<Box<dyn Show>> = vec![Box::new(UniformShow::new(Color::WHITE))];
 
