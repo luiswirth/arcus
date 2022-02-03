@@ -2,35 +2,19 @@ pub mod color;
 pub mod controller;
 pub mod show;
 
-use cortex_m::delay::Delay;
-use embedded_hal::prelude::*;
-use embedded_time::duration::Extensions;
 use rp_pico::{
   hal::{
     self, gpio,
-    pac::{PIO0, TIMER},
+    pac::PIO0,
     pio::{PIOExt, Tx, SM0},
-    timer::{CountDown, Timer},
   },
   pac,
 };
-use self_cell::self_cell;
 
 use self::color::Color;
 
-// self-referential cell
-self_cell!(
-  struct CountDownCell {
-    owner: Timer,
-
-    #[covariant]
-    dependent: CountDown,
-  }
-);
-
 pub struct Lights {
   tx: Tx<(PIO0, SM0)>,
-  count_down: CountDownCell,
 }
 
 impl Lights {
@@ -40,7 +24,6 @@ impl Lights {
     resets: &mut pac::RESETS,
     sysclock_freq: f32,
     _pin2: gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>,
-    timer: TIMER,
   ) -> Self {
     let side_set = pio::SideSet::new(false, 1, false);
 
@@ -91,10 +74,7 @@ impl Lights {
 
     sm.start();
 
-    let timer = Timer::new(timer, resets);
-    let count_down = CountDownCell::new(timer, Timer::count_down);
-
-    Self { tx, count_down }
+    Self { tx }
   }
 
   // TODO: block instead of retry
@@ -103,31 +83,13 @@ impl Lights {
   }
 
   fn write_iter(&mut self, words: impl Iterator<Item = u32>) {
-    self.count_down.with_dependent_mut(|_, c| {
-      // TODO: why does this need to wait so long. 60us should suffice.
-      c.start(600.microseconds());
-      let _ = nb::block!(c.wait());
-    });
+    //let count_down = timer.count_down();
+    // TODO: why does this need to wait so long? 60us should suffice.
+    //count_down.start(600.microseconds());
+    //let _ = nb::block!(count_down.wait());
 
     for word in words {
       self.force_write(word);
     }
-  }
-}
-
-/// Utils for controlling the lights.
-pub struct Utils {
-  delay: Delay,
-}
-impl Utils {
-  pub fn new(delay: Delay) -> Self {
-    Self { delay }
-  }
-
-  pub fn delay_ms(&mut self, ms: u32) {
-    self.delay.delay_ms(ms);
-  }
-  pub fn delay_us(&mut self, us: u32) {
-    self.delay.delay_us(us);
   }
 }

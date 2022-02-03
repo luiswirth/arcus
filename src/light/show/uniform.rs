@@ -2,7 +2,7 @@ use crate::light::{
   color::Color,
   controller::{MemoryController, MemoryControllerExt, U32Memory, U32MemoryController},
   show::State,
-  Lights, Utils,
+  Lights,
 };
 
 use super::Show;
@@ -15,7 +15,7 @@ impl UniformShow {
 }
 
 impl Show for UniformShow {
-  fn update(&mut self, lights: &mut Lights, _utils: &mut Utils) -> State {
+  fn update(&mut self, lights: &mut Lights) -> State {
     let mut mem = U32Memory::new();
     let mut ctrl = U32MemoryController::new(lights, &mut mem);
 
