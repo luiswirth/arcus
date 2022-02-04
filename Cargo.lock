@@ -43,6 +43,7 @@ dependencies = [
  "embedded-hal",
  "embedded-time",
  "fixed",
+ "infrared",
  "nb 1.0.0",
  "num-traits",
  "palette",
@@ -344,6 +345,15 @@ checksum = "282a6247722caba404c065016bbfa522806e51714c34f5dfc3e4a3a46fcb4223"
 dependencies = [
  "autocfg",
  "hashbrown",
+]
+
+[[package]]
+name = "infrared"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5de42a83bae2fbc15464815123044a3002c86f5ed33596c69a5739ffb42d0a5d"
+dependencies = [
+ "embedded-hal",
 ]
 
 [[package]]
