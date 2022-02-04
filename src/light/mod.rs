@@ -1,6 +1,5 @@
 pub mod color;
 pub mod controller;
-pub mod show;
 
 use embedded_hal::timer::CountDown as _;
 use embedded_time::duration::Extensions;

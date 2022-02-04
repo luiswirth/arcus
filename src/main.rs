@@ -5,6 +5,7 @@
 use alloc_cortex_m::CortexMHeap;
 
 pub mod light;
+pub mod show;
 
 #[allow(unused_imports)]
 #[macro_use]
@@ -19,7 +20,6 @@ pub static BOOT2: [u8; 256] = rp2040_boot2::BOOT_LOADER_W25Q080;
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
-// TODO: choose the right dispatchers
 #[rtic::app(
     device = rp_pico::hal::pac,
     peripherals = true,
@@ -43,11 +43,8 @@ mod app {
   use systick_monotonic::*;
 
   use crate::{
-    light::{
-      color::Color,
-      show::{self, Show, UniformShow},
-      Lights,
-    },
+    light::{color::Color, Lights},
+    show::{self, Show},
     ALLOCATOR,
   };
 
@@ -73,7 +70,7 @@ mod app {
   #[shared]
   struct Shared {
     show: Option<Box<dyn Show + Send>>,
-    led: gpio::Pin<gpio::pin::bank0::Gpio25, gpio::PushPullOutput>,
+    _led: gpio::Pin<gpio::pin::bank0::Gpio25, gpio::PushPullOutput>,
     uart: UartPeripheral<uart::Enabled, pac::UART0>,
   }
 
@@ -87,11 +84,9 @@ mod app {
 
   #[init]
   fn init(mut c: init::Context) -> (Shared, Local, init::Monotonics) {
-    {
-      let start = cortex_m_rt::heap_start() as usize;
-      let size = 200 * 1024;
-      unsafe { ALLOCATOR.init(start, size) }
-    }
+    let heap_start = cortex_m_rt::heap_start() as usize;
+    let heap_size = 200 * 1024;
+    unsafe { ALLOCATOR.init(heap_start, heap_size) }
 
     let mut watchdog = hal::Watchdog::new(c.device.WATCHDOG);
     let clocks = clocks::init_clocks_and_plls(
@@ -108,8 +103,8 @@ mod app {
     let timer = Timer::new(c.device.TIMER, &mut c.device.RESETS);
 
     let systick = c.core.SYST;
+    // TODO: is this the right systick frequency?
     let systick_freq = clocks.system_clock.get_freq().integer();
-    //let systick_freq = 12_000_000;
     let mono = Systick::new(systick, systick_freq);
 
     let sio = Sio::new(c.device.SIO);
@@ -122,7 +117,6 @@ mod app {
 
     let mut led: LedPin = pins.led.into_push_pull_output();
     led.set_low().unwrap();
-    led_blink::spawn().unwrap();
 
     let _uart_tx_pin = pins.gpio0.into_mode::<hal::gpio::FunctionUart>();
     let _uart_rx_pin = pins.gpio1.into_mode::<hal::gpio::FunctionUart>();
@@ -142,7 +136,7 @@ mod app {
       lights_pin,
     );
     light_task::spawn().unwrap();
-    let show: Option<Box<dyn Show + Send>> = Some(Box::new(UniformShow::new(Color::WHITE)));
+    let show: Option<Box<dyn Show + Send>> = Some(Box::new(show::UniformShow::new(Color::WHITE)));
 
     let ir_pin: IrReceiverPin = pins.gpio3.into_floating_input();
     let ir_receiver: IrReceiver = infrared::Receiver::builder()
@@ -152,9 +146,14 @@ mod app {
       .pin(ir_pin)
       .build();
     ir_remote_task::spawn().unwrap();
+    uart.write_full_blocking(format!("ranges: ({:?})", ir_receiver.ranges()).as_bytes());
 
     (
-      Shared { led, show, uart },
+      Shared {
+        _led: led,
+        show,
+        uart,
+      },
       Local {
         lights,
         ir_receiver,
@@ -162,14 +161,6 @@ mod app {
       },
       init::Monotonics(mono),
     )
-  }
-
-  // Background task, runs whenever no other tasks are running.
-  #[idle]
-  fn idle(_: idle::Context) -> ! {
-    loop {
-      continue;
-    }
   }
 
   #[task(
@@ -219,34 +210,14 @@ mod app {
       c.shared
         .uart
         .lock(|uart| uart.write_full_blocking(color_idx.to_string().as_bytes()));
-      let new_show: Box<dyn Show + Send> = match *color_idx % 7 {
-        0 => Box::new(UniformShow::new(Color::RED)),
-        1 => Box::new(UniformShow::new(Color::GREEN)),
-        2 => Box::new(UniformShow::new(Color::BLUE)),
-        3 => Box::new(UniformShow::new(Color::YELLOW)),
-        4 => Box::new(UniformShow::new(Color::CYAN)),
-        5 => Box::new(UniformShow::new(Color::MAGENTA)),
-        6 => Box::new(show::DemoShow::default()),
-        _ => Box::new(UniformShow::new(Color::NONE)),
+      let new_show: Box<dyn Show + Send> = match *color_idx % 3 {
+        0 => Box::new(show::UniformShow::new(Color::RED)),
+        1 => Box::new(show::UniformShow::new(Color::GREEN)),
+        2 => Box::new(show::UniformShow::new(Color::BLUE)),
+        _ => Box::new(show::UniformShow::new(Color::NONE)),
       };
       c.shared.show.lock(|show| *show = Some(new_show));
       *color_idx = color_idx.wrapping_add(1);
     }
-  }
-
-  #[task(
-        priority = 1,
-        shared = [led],
-        local = [tog: bool = true],
-    )]
-  fn led_blink(mut c: led_blink::Context) {
-    if *c.local.tog {
-      c.shared.led.lock(|l| l.set_high().unwrap());
-    } else {
-      c.shared.led.lock(|l| l.set_low().unwrap());
-    }
-    *c.local.tog = !*c.local.tog;
-
-    led_blink::spawn_after(1.secs()).unwrap();
   }
 }

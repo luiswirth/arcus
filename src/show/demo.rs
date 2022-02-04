@@ -1,11 +1,13 @@
 use arclib::{ONE, ZERO};
 use rp_pico::hal::timer::CountDown;
 
-use crate::light::{
-  color::Color,
-  controller::{MemoryController, MemoryControllerExt, U32Memory, U32MemoryController},
+use crate::{
+  light::{
+    color::Color,
+    controller::{MemoryController, MemoryControllerExt, U32Memory, U32MemoryController},
+    Lights,
+  },
   show::State,
-  Lights,
 };
 
 use super::Show;
