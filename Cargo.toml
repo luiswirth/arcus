@@ -31,7 +31,7 @@ num-traits = { version = "0.2.14", default-features = false, features = [ "libm"
 rand = { version = "0.8.4", default-features = false, features = [ "small_rng" ] }
 palette = { version = "0.6.0", default-features = false, features = [ "libm" ] }
 self_cell = "0.10.2"
-fixed = "1.11.0"
+fixed = "1.12.0"
 cordic = "0.1.5"
 systick-monotonic = "1.0.0"
 infrared = "0.13.0"
