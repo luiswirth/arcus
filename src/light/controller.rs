@@ -1,3 +1,5 @@
+use rp_pico::hal::timer::CountDown;
+
 use super::{Color, Lights};
 
 /// Raw Controller.
@@ -44,10 +46,15 @@ impl U32Memory {
 pub struct U32MemoryController<'a> {
   memory: &'a mut U32Memory,
   lights: &'a mut Lights,
+  count_down: CountDown<'a>,
 }
 impl<'a> U32MemoryController<'a> {
-  pub fn new(lights: &'a mut Lights, memory: &'a mut U32Memory) -> Self {
-    Self { lights, memory }
+  pub fn new(lights: &'a mut Lights, memory: &'a mut U32Memory, count_down: CountDown<'a>) -> Self {
+    Self {
+      lights,
+      memory,
+      count_down,
+    }
   }
 }
 impl<'a> MemoryController<'a> for U32MemoryController<'a> {
@@ -63,7 +70,9 @@ impl<'a> MemoryController<'a> for U32MemoryController<'a> {
   }
 
   fn display(&mut self) {
-    self.lights.write_iter(self.memory.0.into_iter());
+    self
+      .lights
+      .write_iter(self.memory.0.into_iter(), &mut self.count_down);
   }
 }
 

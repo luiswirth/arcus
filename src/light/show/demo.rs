@@ -1,10 +1,11 @@
 use arclib::{ONE, ZERO};
+use rp_pico::hal::timer::CountDown;
 
 use crate::light::{
   color::Color,
   controller::{MemoryController, MemoryControllerExt, U32Memory, U32MemoryController},
   show::State,
-  Lights, Utils,
+  Lights,
 };
 
 use super::Show;
@@ -31,9 +32,9 @@ pub enum DemoState {
 }
 
 impl Show for DemoShow {
-  fn update(&mut self, lights: &mut Lights, _utils: &mut Utils) -> State {
+  fn update(&mut self, lights: &mut Lights, count_down: CountDown) -> State {
     const N: usize = Lights::N;
-    let mut ctrl = U32MemoryController::new(lights, &mut self.memory);
+    let mut ctrl = U32MemoryController::new(lights, &mut self.memory, count_down);
 
     match self.state {
       DemoState::Init => {

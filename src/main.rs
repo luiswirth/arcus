@@ -36,7 +36,7 @@ mod app {
       clocks::{self, ClockSource},
       gpio,
       uart::{self, UartPeripheral},
-      Sio,
+      Sio, Timer,
     },
     pac,
   };
@@ -82,6 +82,7 @@ mod app {
   struct Local {
     lights: Lights,
     ir_receiver: IrReceiver,
+    timer: Timer,
   }
 
   #[init]
@@ -104,6 +105,7 @@ mod app {
     )
     .ok()
     .unwrap();
+    let timer = Timer::new(c.device.TIMER, &mut c.device.RESETS);
 
     let systick = c.core.SYST;
     let systick_freq = clocks.system_clock.get_freq().integer();
@@ -143,7 +145,12 @@ mod app {
     let show: Option<Box<dyn Show + Send>> = Some(Box::new(UniformShow::new(Color::WHITE)));
 
     let ir_pin: IrReceiverPin = pins.gpio3.into_floating_input();
-    let ir_receiver = IrReceiver::with_pin(RECEIVER_FREQ_HZ, ir_pin);
+    let ir_receiver: IrReceiver = infrared::Receiver::builder()
+      .nec()
+      .polled()
+      .resolution(RECEIVER_FREQ_HZ)
+      .pin(ir_pin)
+      .build();
     ir_remote_task::spawn().unwrap();
 
     (
@@ -151,6 +158,7 @@ mod app {
       Local {
         lights,
         ir_receiver,
+        timer,
       },
       init::Monotonics(mono),
     )
@@ -167,12 +175,16 @@ mod app {
   #[task(
         priority = 1,
         shared = [show],
-        local = [lights],
+        local = [lights, timer],
     )]
   fn light_task(mut c: light_task::Context) {
     c.shared.show.lock(|show_option| {
       if let Some(show) = show_option {
-        let state = Show::update(show.as_mut(), &mut *c.local.lights);
+        let state = Show::update(
+          show.as_mut(),
+          &mut *c.local.lights,
+          c.local.timer.count_down(),
+        );
         if matches!(state, show::State::Finished) {
           *show_option = None;
         }
@@ -188,6 +200,8 @@ mod app {
         local = [ir_receiver, color_idx: u32 = 0],
     )]
   fn ir_remote_task(mut c: ir_remote_task::Context) {
+    ir_remote_task::spawn_after((RECEIVER_DURATION_US as u64).micros()).unwrap();
+
     let cmd = c.local.ir_receiver.poll();
     let string = match cmd {
       Err(e) => Some(format!("Error: {:?} ", e)),
@@ -205,22 +219,19 @@ mod app {
       c.shared
         .uart
         .lock(|uart| uart.write_full_blocking(color_idx.to_string().as_bytes()));
-      let color = match *color_idx % 6 {
-        0 => Color::RED,
-        1 => Color::GREEN,
-        2 => Color::BLUE,
-        3 => Color::YELLOW,
-        4 => Color::CYAN,
-        5 => Color::MAGENTA,
-        _ => Color::NONE,
+      let new_show: Box<dyn Show + Send> = match *color_idx % 7 {
+        0 => Box::new(UniformShow::new(Color::RED)),
+        1 => Box::new(UniformShow::new(Color::GREEN)),
+        2 => Box::new(UniformShow::new(Color::BLUE)),
+        3 => Box::new(UniformShow::new(Color::YELLOW)),
+        4 => Box::new(UniformShow::new(Color::CYAN)),
+        5 => Box::new(UniformShow::new(Color::MAGENTA)),
+        6 => Box::new(show::DemoShow::default()),
+        _ => Box::new(UniformShow::new(Color::NONE)),
       };
-      c.shared
-        .show
-        .lock(|show| *show = Some(Box::new(UniformShow::new(color))));
+      c.shared.show.lock(|show| *show = Some(new_show));
       *color_idx = color_idx.wrapping_add(1);
     }
-
-    ir_remote_task::spawn_after((RECEIVER_DURATION_US as u64).micros()).unwrap();
   }
 
   #[task(

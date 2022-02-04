@@ -2,11 +2,14 @@ pub mod color;
 pub mod controller;
 pub mod show;
 
+use embedded_hal::timer::CountDown as _;
+use embedded_time::duration::Extensions;
 use rp_pico::{
   hal::{
     self, gpio,
     pac::PIO0,
     pio::{PIOExt, Tx, SM0},
+    timer::CountDown,
   },
   pac,
 };
@@ -82,11 +85,10 @@ impl Lights {
     while !self.tx.write(word) {}
   }
 
-  fn write_iter(&mut self, words: impl Iterator<Item = u32>) {
-    //let count_down = timer.count_down();
+  fn write_iter(&mut self, words: impl Iterator<Item = u32>, count_down: &mut CountDown) {
     // TODO: why does this need to wait so long? 60us should suffice.
-    //count_down.start(600.microseconds());
-    //let _ = nb::block!(count_down.wait());
+    count_down.start(600u32.microseconds());
+    let _ = nb::block!(count_down.wait());
 
     for word in words {
       self.force_write(word);

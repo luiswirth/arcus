@@ -1,21 +1,22 @@
 use super::Lights;
 
-//pub mod demo;
+pub mod demo;
 pub mod uniform;
 //pub mod firefly;
 //pub mod gradient;
 //pub mod lightning;
 //pub mod off;
 //pub mod pendulum;
-//pub mod quick;
+pub mod quick;
 
-//pub use demo::DemoShow;
+pub use demo::DemoShow;
 //pub use firefly::FireflyShow;
 //pub use gradient::GradientShow;
 //pub use lightning::{CollisionShow, SparkleShow};
 //pub use off::OffShow;
 //pub use pendulum::PendulumShow;
-//pub use quick::QuickShow;
+pub use quick::QuickShow;
+use rp_pico::hal::timer::CountDown;
 pub use uniform::UniformShow;
 
 pub enum State {
@@ -24,5 +25,5 @@ pub enum State {
 }
 
 pub trait Show {
-  fn update(&mut self, lights: &mut Lights) -> State;
+  fn update(&mut self, lights: &mut Lights, count_down: CountDown) -> State;
 }
