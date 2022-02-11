@@ -1,5 +1,5 @@
 use crate::{
-  app::remote_task,
+  app::remote_task::{self, SharedResources},
   light::color::Color,
   show::{self, Show},
 };
@@ -8,47 +8,63 @@ use alloc::boxed::Box;
 use infrared::{self as ir, remotecontrol as irrc};
 use rp_pico::hal::gpio;
 use rtic::Mutex;
-use systick_monotonic::*;
 
+type IrProto = infrared::protocol::Nec;
+type IrCommand = <IrProto as infrared::Protocol>::Cmd;
 pub type IrReceiverPin = gpio::Pin<gpio::bank0::Gpio3, gpio::Input<gpio::Floating>>;
 pub type IrReceiver = infrared::Receiver<
-  ir::protocol::Nec,
-  ir::receiver::Poll,
-  ir::receiver::PinInput<gpio::Pin<gpio::bank0::Gpio3, gpio::Input<gpio::Floating>>>,
+  IrProto,
+  ir::receiver::Event,
+  ir::receiver::PinInput<IrReceiverPin>,
   irrc::Button<CarMp3>,
 >;
 
-pub const RECEIVER_FREQ_HZ: u32 = 20_000;
-pub const RECEIVER_DURATION_US: u32 = 1_000_000 / RECEIVER_FREQ_HZ;
-
 pub struct RemoteTask {
   ir_receiver: IrReceiver,
+  last_event_instant: u32,
   counter: u32,
 }
 impl RemoteTask {
   pub fn init(ir_pin: IrReceiverPin) -> Self {
+    ir_pin.set_interrupt_enabled(gpio::Interrupt::EdgeHigh, true);
+    ir_pin.set_interrupt_enabled(gpio::Interrupt::EdgeLow, true);
+
     let ir_receiver: IrReceiver = ir::Receiver::builder()
       .pin(ir_pin)
-      .polled()
-      .resolution(RECEIVER_FREQ_HZ)
-      .nec()
+      .event_driven()
+      .protocol::<IrProto>()
       .remotecontrol(CarMp3)
       .build();
-    remote_task::spawn().unwrap();
 
     Self {
       ir_receiver,
+      last_event_instant: 0,
       counter: 0,
     }
   }
 }
 
-pub fn remote_task(mut ctx: remote_task::Context) {
-  let this = ctx.local.remote_task;
+pub fn remote_task(ctx: remote_task::Context) {
+  let RemoteTask {
+    ir_receiver,
+    counter,
+    last_event_instant,
+  } = ctx.local.remote_task;
+  let SharedResources {
+    mut timer,
+    mut show,
+    mut uart,
+  } = ctx.shared;
 
-  remote_task::spawn_after((RECEIVER_DURATION_US as u64).micros()).unwrap();
+  let pin = ir_receiver.pin();
+  pin.clear_interrupt(gpio::Interrupt::EdgeHigh);
+  pin.clear_interrupt(gpio::Interrupt::EdgeLow);
 
-  let cmd = this.ir_receiver.poll();
+  let now = timer.lock(|t| t.get_counter_low());
+  let dt = now.wrapping_sub(*last_event_instant);
+  *last_event_instant = now;
+
+  let cmd = ir_receiver.event(dt);
   let string = match cmd {
     Err(e) => Some(format!("IrError: {:?}\n", e)),
     Ok(Some(ref cmd)) => Some(format!(
@@ -59,18 +75,12 @@ pub fn remote_task(mut ctx: remote_task::Context) {
     Ok(None) => None,
   };
   if let Some(string) = string {
-    ctx
-      .shared
-      .uart
-      .lock(|uart| uart.write_full_blocking(string.as_bytes()));
+    uart.lock(|uart| uart.write_full_blocking(string.as_bytes()));
   }
 
   if let Ok(Some(_)) = cmd {
-    ctx
-      .shared
-      .show
-      .lock(|show| *show = Some(next_show(this.counter)));
-    this.counter = this.counter.wrapping_add(1);
+    show.lock(|show| *show = Some(next_show(*counter)));
+    *counter = counter.wrapping_add(1);
   }
 }
 
@@ -97,7 +107,7 @@ impl irrc::RemoteControlModel for CarMp3 {
 
   const ADDRESS: u32 = 0;
 
-  type Cmd = ir::protocol::NecCommand;
+  type Cmd = IrCommand;
 
   const BUTTONS: &'static [(u32, infrared::remotecontrol::Action)] = &[
     (0xFFA25D, irrc::Action::ChannelListPrev),

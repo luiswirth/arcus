@@ -20,7 +20,7 @@ pub struct Lights {
 }
 
 impl Lights {
-  pub const N: usize = 60 * 4;
+  pub const N: usize = 4 * 60;
   pub fn init(
     pio_instance: pac::PIO0,
     resets: &mut pac::RESETS,

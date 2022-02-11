@@ -23,7 +23,7 @@ rp2040-boot2 = "0.2.0"
 rp-pico = "0.2.0"
 pio = "0.1.0"
 
-embedded-hal = "0.2.6"
+embedded-hal = "0.2.7"
 embedded-time = "0.12.1"
 
 nb = "1.0.0"
