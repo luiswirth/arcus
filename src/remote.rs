@@ -16,13 +16,12 @@ pub type IrReceiver = infrared::Receiver<
   IrProto,
   ir::receiver::Event,
   ir::receiver::PinInput<IrReceiverPin>,
-  irrc::Button<CarMp3>,
+  irrc::Button<NadRc512>,
 >;
 
 pub struct RemoteTask {
   ir_receiver: IrReceiver,
   last_event_instant: u32,
-  counter: u32,
 }
 impl RemoteTask {
   pub fn init(ir_pin: IrReceiverPin) -> Self {
@@ -33,13 +32,12 @@ impl RemoteTask {
       .pin(ir_pin)
       .event_driven()
       .protocol::<IrProto>()
-      .remotecontrol(CarMp3)
+      .remotecontrol(NadRc512)
       .build();
 
     Self {
       ir_receiver,
       last_event_instant: 0,
-      counter: 0,
     }
   }
 }
@@ -47,13 +45,12 @@ impl RemoteTask {
 pub fn remote_task(ctx: remote_task::Context) {
   let RemoteTask {
     ir_receiver,
-    counter,
     last_event_instant,
   } = ctx.local.remote_task;
   let SharedResources {
     mut timer,
     mut show,
-    mut uart,
+    uart: _uart,
   } = ctx.shared;
 
   let pin = ir_receiver.pin();
@@ -64,72 +61,87 @@ pub fn remote_task(ctx: remote_task::Context) {
   let dt = now.wrapping_sub(*last_event_instant);
   *last_event_instant = now;
 
-  let cmd = ir_receiver.event(dt);
-  let string = match cmd {
-    Err(e) => Some(format!("IrError: {:?}\n", e)),
-    Ok(Some(ref cmd)) => Some(format!(
-      "IrCmd: {:?} IrAction: {:?}\n",
-      cmd.command(),
-      cmd.action()
-    )),
-    Ok(None) => None,
+  match ir_receiver.event(dt) {
+    Ok(Some(cmd)) => match cmd.action() {
+      Some(action) => match next_show(action) {
+        Some(next_show) => show.lock(|show| *show = Some(next_show)),
+        None => {}
+      },
+      None => {}
+    },
+    // TODO: handle
+    Err(_e) => {}
+    Ok(None) => {}
   };
-  if let Some(string) = string {
-    uart.lock(|uart| uart.write_full_blocking(string.as_bytes()));
-  }
-
-  if let Ok(Some(_)) = cmd {
-    show.lock(|show| *show = Some(next_show(*counter)));
-    *counter = counter.wrapping_add(1);
-  }
 }
 
-fn next_show(counter: u32) -> Box<dyn Show + Send> {
-  match counter % 6 {
-    0 => Box::new(show::UniformShow::new(Color::ALL)),
-    1 => Box::new(show::UniformShow::new(Color::WHITE)),
-    2 => Box::new(show::UniformShow::new(Color::RED)),
-    3 => Box::new(show::UniformShow::new(Color::GREEN)),
-    4 => Box::new(show::UniformShow::new(Color::BLUE)),
-    5 => Box::new(show::UniformShow::new(Color::NONE)),
-    _ => Box::new(show::UniformShow::new(Color::NONE)),
+fn next_show(action: irrc::Action) -> Option<Box<dyn Show + Send>> {
+  macro_rules! uni {
+    ($c:path) => {
+      Some(Box::new(show::UniformShow::new($c)))
+    };
+  }
+
+  match action {
+    irrc::Action::Stop => uni!(Color::NONE),
+    irrc::Action::Play_Pause => None,
+    irrc::Action::Random => None,
+    irrc::Action::Time => None,
+    irrc::Action::Repeat => None,
+    irrc::Action::One => uni!(Color::RED),
+    irrc::Action::Two => uni!(Color::GREEN),
+    irrc::Action::Three => uni!(Color::BLUE),
+    irrc::Action::Four => uni!(Color::YELLOW),
+    irrc::Action::Five => uni!(Color::MAGENTA),
+    irrc::Action::Six => uni!(Color::CYAN),
+    irrc::Action::Seven => uni!(Color::WHITE),
+    irrc::Action::Eight => uni!(Color::RGB),
+    irrc::Action::Nine => uni!(Color::RGBW),
+    //irrc::Action::? => None,
+    irrc::Action::Zero => None,
+    irrc::Action::Prog => None,
+    irrc::Action::Prev => None,
+    irrc::Action::Next => None,
+    irrc::Action::Rewind => None,
+    irrc::Action::Forward => None,
+    _ => None,
   }
 }
 
 #[derive(Default, Debug)]
-pub struct CarMp3;
-impl irrc::RemoteControlModel for CarMp3 {
-  const MODEL: &'static str = "Car Mp3";
+pub struct NadRc512;
+impl irrc::RemoteControlModel for NadRc512 {
+  const MODEL: &'static str = "NAD RC512";
 
   const DEVTYPE: irrc::DeviceType = irrc::DeviceType::Generic;
 
   const PROTOCOL: ir::ProtocolId = ir::ProtocolId::Nec;
 
-  const ADDRESS: u32 = 0;
+  const ADDRESS: u32 = 135;
 
   type Cmd = IrCommand;
 
-  const BUTTONS: &'static [(u32, infrared::remotecontrol::Action)] = &[
-    (0xFFA25D, irrc::Action::ChannelListPrev),
-    (0xFF629D, irrc::Action::ChannelList),
-    (0xFFE21D, irrc::Action::ChannelListNext),
-    (0xFF22DD, irrc::Action::Prev),
-    (0xFF02FD, irrc::Action::Next),
-    (0xFFC23D, irrc::Action::Play_Pause),
-    (0xFFE01F, irrc::Action::VolumeDown),
-    (0xFFA857, irrc::Action::VolumeUp),
-    (0xFF906F, irrc::Action::Eq),
-    (0xFF6897, irrc::Action::Zero),
-    //(0xFF9867, irrc::Action::?),
-    //(0xFFB04F, irrc::Action::?),
-    (0xFF30CF, irrc::Action::One),
-    (0xFF18E7, irrc::Action::Two),
-    (0xFF7A85, irrc::Action::Three),
-    (0xFF10EF, irrc::Action::Four),
-    (0xFF38C7, irrc::Action::Five),
-    (0xFF5AA5, irrc::Action::Six),
-    (0xFF42BD, irrc::Action::Seven),
-    (0xFF4AB5, irrc::Action::Eight),
-    (0xFF52AD, irrc::Action::Nine),
+  const BUTTONS: &'static [(u32, irrc::Action)] = &[
+    (2, irrc::Action::Stop),
+    (1, irrc::Action::Play_Pause),
+    (3, irrc::Action::Random),
+    (8, irrc::Action::Time),
+    (10, irrc::Action::Repeat),
+    (12, irrc::Action::One),
+    (13, irrc::Action::Two),
+    (14, irrc::Action::Three),
+    (15, irrc::Action::Four),
+    (16, irrc::Action::Five),
+    (17, irrc::Action::Six),
+    (18, irrc::Action::Seven),
+    (19, irrc::Action::Eight),
+    (21, irrc::Action::Nine),
+    //(77, irrc::Action::?),
+    (76, irrc::Action::Zero),
+    (11, irrc::Action::Prog),
+    (5, irrc::Action::Prev),
+    (6, irrc::Action::Next),
+    (4, irrc::Action::Rewind),
+    (7, irrc::Action::Forward),
   ];
 }

@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 #![feature(default_alloc_error_handler)]
+#![allow(clippy::single_match)]
 
 pub mod app;
 pub mod light;

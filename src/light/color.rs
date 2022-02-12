@@ -87,7 +87,8 @@ impl Color {
   pub const BLUE: Self = Self::new(ZERO, ZERO, ONE, ZERO);
   pub const WHITE: Self = Self::new(ZERO, ZERO, ZERO, ONE);
 
-  pub const ALL: Self = Self::new(ONE, ONE, ONE, ONE);
+  pub const RGB: Self = Self::new(ONE, ONE, ONE, ZERO);
+  pub const RGBW: Self = Self::new(ONE, ONE, ONE, ONE);
   pub const NONE: Self = Self::new(ZERO, ZERO, ZERO, ZERO);
 
   pub const YELLOW: Self = Self::new(ONE, ONE, ZERO, ZERO);
