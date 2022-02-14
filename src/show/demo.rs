@@ -1,5 +1,5 @@
 use arclib::{ONE, ZERO};
-use rp_pico::hal::timer::CountDown;
+use embedded_hal::blocking::delay::DelayMs;
 
 use crate::{
   light::{
@@ -8,6 +8,7 @@ use crate::{
     Lights,
   },
   show::State,
+  util::AsmDelay,
 };
 
 use super::Show;
@@ -34,9 +35,9 @@ pub enum DemoState {
 }
 
 impl Show for DemoShow {
-  fn update(&mut self, lights: &mut Lights, count_down: CountDown) -> State {
+  fn update(&mut self, lights: &mut Lights, mut asm_delay: AsmDelay) -> State {
     const N: usize = Lights::N;
-    let mut ctrl = U32MemoryController::new(lights, &mut self.memory, count_down);
+    let mut ctrl = U32MemoryController::new(lights, &mut self.memory, asm_delay);
 
     match self.state {
       DemoState::Init => {
@@ -49,7 +50,7 @@ impl Show for DemoShow {
         color[c] = ONE;
         ctrl.set(l, color);
         ctrl.display();
-        //utils.delay_ms(40);
+        asm_delay.delay_ms(40);
         l += 1;
         if l == N {
           l = 0;
@@ -66,7 +67,7 @@ impl Show for DemoShow {
         let color = Color::new(ONE, ONE, ONE, ZERO);
         ctrl.set(l, color);
         ctrl.display();
-        //utils.delay_ms(40);
+        asm_delay.delay_ms(40);
         l += 1;
         if l == N {
           l = 0;
@@ -80,10 +81,12 @@ impl Show for DemoShow {
         let color = Color::new(ONE, ONE, ONE, ONE);
         ctrl.set(l, color);
         ctrl.display();
-        //utils.delay_ms(40);
+        asm_delay.delay_ms(40);
         l += 1;
         if l == N {
-          State::Finished
+          //State::Finished
+          self.state = DemoState::Init;
+          State::Running
         } else {
           self.state = DemoState::Rgbw { l };
           State::Running

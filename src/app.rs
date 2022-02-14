@@ -17,7 +17,7 @@ mod inner_app {
       clocks::{self, ClockSource},
       gpio,
       uart::{self, UartPeripheral},
-      Sio, Timer,
+      Sio,
     },
     pac,
   };
@@ -40,8 +40,7 @@ mod inner_app {
   struct Shared {
     show: Option<Box<dyn Show + Send>>,
     _led: gpio::Pin<gpio::pin::bank0::Gpio25, gpio::PushPullOutput>,
-    uart: UartPeripheral<uart::Enabled, pac::UART0>,
-    timer: Timer,
+    _uart: UartPeripheral<uart::Enabled, pac::UART0>,
   }
 
   #[local]
@@ -68,10 +67,8 @@ mod inner_app {
     )
     .ok()
     .unwrap();
-    let timer = Timer::new(ctx.device.TIMER, &mut ctx.device.RESETS);
 
     let systick = ctx.core.SYST;
-    // TODO: is this the right systick frequency?
     let systick_freq = clocks.system_clock.get_freq().integer();
     let mono = Systick::new(systick, systick_freq);
 
@@ -104,14 +101,17 @@ mod inner_app {
       &mut ctx.device.RESETS,
     );
 
-    let remote_task = remote::RemoteTask::init(pins.gpio3.into_floating_input());
+    let remote_task = remote::RemoteTask::init(
+      pins.gpio3.into_floating_input(),
+      ctx.device.TIMER,
+      &mut ctx.device.RESETS,
+    );
 
     (
       Shared {
         _led: led,
         show,
-        uart,
-        timer,
+        _uart: uart,
       },
       Local {
         show_task,
@@ -125,7 +125,7 @@ mod inner_app {
   extern "Rust" {
     #[task(
         priority = 1,
-        shared = [show, timer],
+        shared = [show],
         local = [show_task],
     )]
     fn show_task(ctx: show_task::Context);
@@ -133,7 +133,7 @@ mod inner_app {
     #[task(
         binds = IO_IRQ_BANK0,
         priority = 2,
-        shared = [timer, show, uart],
+        shared = [show],
         local = [remote_task],
     )]
     fn remote_task(ctx: remote_task::Context);

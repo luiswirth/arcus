@@ -7,6 +7,7 @@ pub mod app;
 pub mod light;
 pub mod remote;
 pub mod show;
+pub mod util;
 
 extern crate panic_semihosting;
 

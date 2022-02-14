@@ -1,17 +1,17 @@
 pub mod color;
 pub mod controller;
 
-use embedded_hal::timer::CountDown as _;
-use embedded_time::duration::Extensions;
+use cortex_m::prelude::_embedded_hal_blocking_delay_DelayUs;
 use rp_pico::{
   hal::{
     self, gpio,
     pac::PIO0,
     pio::{PIOExt, Tx, SM0},
-    timer::CountDown,
   },
   pac,
 };
+
+use crate::util::AsmDelay;
 
 use self::color::Color;
 
@@ -20,7 +20,7 @@ pub struct Lights {
 }
 
 impl Lights {
-  pub const N: usize = 60; //4 * 60;
+  pub const N: usize = 20; //4 * 60;
   pub fn init(
     pio_instance: pac::PIO0,
     resets: &mut pac::RESETS,
@@ -79,18 +79,15 @@ impl Lights {
     Self { tx }
   }
 
-  // TODO: block instead of retry
   fn force_write(&mut self, word: u32) {
     while !self.tx.write(word) {}
   }
 
-  fn write_iter(&mut self, words: impl Iterator<Item = u32>, count_down: &mut CountDown) {
-    // TODO: why does this need to wait so long? 60us should suffice.
-    count_down.start(600u32.microseconds());
-    let _ = nb::block!(count_down.wait());
-
+  fn write_iter(&mut self, words: impl Iterator<Item = u32>, mut asm_delay: AsmDelay) {
     for word in words {
       self.force_write(word);
     }
+    // TODO: this should be 60us
+    asm_delay.delay_us(600);
   }
 }

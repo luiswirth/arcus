@@ -1,4 +1,4 @@
-use rp_pico::hal::timer::CountDown;
+use crate::util::AsmDelay;
 
 use super::{Color, Lights};
 
@@ -46,14 +46,14 @@ impl U32Memory {
 pub struct U32MemoryController<'a> {
   memory: &'a mut U32Memory,
   lights: &'a mut Lights,
-  count_down: CountDown<'a>,
+  asm_delay: AsmDelay,
 }
 impl<'a> U32MemoryController<'a> {
-  pub fn new(lights: &'a mut Lights, memory: &'a mut U32Memory, count_down: CountDown<'a>) -> Self {
+  pub fn new(lights: &'a mut Lights, memory: &'a mut U32Memory, asm_delay: AsmDelay) -> Self {
     Self {
       lights,
       memory,
-      count_down,
+      asm_delay,
     }
   }
 }
@@ -72,7 +72,7 @@ impl<'a> MemoryController<'a> for U32MemoryController<'a> {
   fn display(&mut self) {
     self
       .lights
-      .write_iter(self.memory.0.into_iter(), &mut self.count_down);
+      .write_iter(self.memory.0.into_iter(), self.asm_delay);
   }
 }
 

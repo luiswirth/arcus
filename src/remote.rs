@@ -6,7 +6,10 @@ use crate::{
 
 use alloc::boxed::Box;
 use infrared::{self as ir, remotecontrol as irrc};
-use rp_pico::hal::gpio;
+use rp_pico::{
+  hal::{gpio, Timer},
+  pac,
+};
 use rtic::Mutex;
 
 type IrProto = infrared::protocol::Nec;
@@ -21,10 +24,12 @@ pub type IrReceiver = infrared::Receiver<
 
 pub struct RemoteTask {
   ir_receiver: IrReceiver,
+
+  timer: Timer,
   last_event_instant: u32,
 }
 impl RemoteTask {
-  pub fn init(ir_pin: IrReceiverPin) -> Self {
+  pub fn init(ir_pin: IrReceiverPin, timer: pac::TIMER, resets: &mut pac::RESETS) -> Self {
     ir_pin.set_interrupt_enabled(gpio::Interrupt::EdgeHigh, true);
     ir_pin.set_interrupt_enabled(gpio::Interrupt::EdgeLow, true);
 
@@ -35,8 +40,12 @@ impl RemoteTask {
       .remotecontrol(NadRc512)
       .build();
 
+    let timer = Timer::new(timer, resets);
+
     Self {
       ir_receiver,
+
+      timer,
       last_event_instant: 0,
     }
   }
@@ -45,19 +54,17 @@ impl RemoteTask {
 pub fn remote_task(ctx: remote_task::Context) {
   let RemoteTask {
     ir_receiver,
+
+    timer,
     last_event_instant,
   } = ctx.local.remote_task;
-  let SharedResources {
-    mut timer,
-    mut show,
-    uart: _uart,
-  } = ctx.shared;
+  let SharedResources { mut show } = ctx.shared;
 
   let pin = ir_receiver.pin();
   pin.clear_interrupt(gpio::Interrupt::EdgeHigh);
   pin.clear_interrupt(gpio::Interrupt::EdgeLow);
 
-  let now = timer.lock(|t| t.get_counter_low());
+  let now = timer.get_counter_low();
   let dt = now.wrapping_sub(*last_event_instant);
   *last_event_instant = now;
 
@@ -99,7 +106,7 @@ fn next_show(action: irrc::Action) -> Option<Box<dyn Show + Send>> {
     irrc::Action::Nine => uni!(Color::RGBW),
     //irrc::Action::? => None,
     irrc::Action::Zero => None,
-    irrc::Action::Prog => None,
+    irrc::Action::Prog => Some(Box::new(show::DemoShow::default())),
     irrc::Action::Prev => None,
     irrc::Action::Next => None,
     irrc::Action::Rewind => None,

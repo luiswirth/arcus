@@ -1,5 +1,3 @@
-use rp_pico::hal::timer::CountDown;
-
 use crate::{
   light::{
     color::Color,
@@ -7,6 +5,7 @@ use crate::{
     Lights,
   },
   show::State,
+  util::AsmDelay,
 };
 
 use super::Show;
@@ -19,9 +18,9 @@ impl UniformShow {
 }
 
 impl Show for UniformShow {
-  fn update(&mut self, lights: &mut Lights, count_down: CountDown) -> State {
+  fn update(&mut self, lights: &mut Lights, asm_delay: AsmDelay) -> State {
     let mut mem = U32Memory::new();
-    let mut ctrl = U32MemoryController::new(lights, &mut mem, count_down);
+    let mut ctrl = U32MemoryController::new(lights, &mut mem, asm_delay);
 
     ctrl.set_all(self.0);
     ctrl.display();
