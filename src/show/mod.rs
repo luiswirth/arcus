@@ -1,5 +1,8 @@
 use crate::{
-  app::show_task::{self, SharedResources},
+  app::{
+    self,
+    show_task::{self, SharedResources},
+  },
   light::Lights,
   util::AsmDelay,
 };
@@ -43,27 +46,51 @@ impl ShowTask {
 
 pub fn show_task(ctx: show_task::Context) {
   let ShowTask { lights, asm_delay } = ctx.local.show_task;
-  let SharedResources { mut show } = ctx.shared;
+  let SharedResources {
+    mut show,
+    mut cancel,
+  } = ctx.shared;
   let show_take = show.lock(|show| show.take());
   if let Some(mut show_take) = show_take {
-    let state = Show::update(show_take.as_mut(), lights, *asm_delay);
-    if matches!(state, State::Running) {
-      show.lock(|show| {
-        if show.is_none() {
-          *show = Some(show_take);
-        }
-      });
-    }
+    cancel.lock(|cancel| cancel.reset());
+    Show::run(show_take.as_mut(), lights, *asm_delay, &mut cancel);
   }
 
   show_task::spawn().unwrap();
 }
 
-pub enum State {
-  Running,
-  Finished,
+pub trait Show {
+  fn run(
+    &mut self,
+    lights: &mut Lights,
+    asm_delay: AsmDelay,
+    cancel: &mut app::shared_resources::cancel_lock,
+  );
 }
 
-pub trait Show {
-  fn update(&mut self, lights: &mut Lights, asm_delay: AsmDelay) -> State;
+#[derive(Default)]
+pub struct CancellationToken {
+  requested: bool,
+}
+impl CancellationToken {
+  fn is_requested(&self) -> bool {
+    self.requested
+  }
+
+  pub fn request(&mut self) {
+    self.requested = true;
+  }
+
+  fn reset(&mut self) {
+    self.requested = false;
+  }
+}
+
+#[macro_export]
+macro_rules! return_cancel {
+  ($cancel:ident) => {{
+    if ::rtic::Mutex::lock($cancel, |cancel| cancel.is_requested()) {
+      return;
+    }
+  }};
 }

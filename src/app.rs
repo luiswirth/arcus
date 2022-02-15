@@ -11,22 +11,19 @@ mod inner_app {
   use embedded_hal::digital::v2::OutputPin;
   use embedded_time::fixed_point::FixedPoint;
 
-  use rp_pico::{
-    hal::{
-      self,
-      clocks::{self, ClockSource},
-      gpio,
-      uart::{self, UartPeripheral},
-      Sio,
-    },
-    pac,
+  use rp_pico::hal::{
+    self,
+    clocks::{self, ClockSource},
+    gpio,
+    uart::UartPeripheral,
+    Sio,
   };
   use systick_monotonic::*;
 
   use crate::{
     light::color::Color,
     remote,
-    show::{self, Show},
+    show::{self, CancellationToken, Show},
     ALLOCATOR,
   };
 
@@ -39,8 +36,7 @@ mod inner_app {
   #[shared]
   struct Shared {
     show: Option<Box<dyn Show + Send>>,
-    _led: gpio::Pin<gpio::pin::bank0::Gpio25, gpio::PushPullOutput>,
-    _uart: UartPeripheral<uart::Enabled, pac::UART0>,
+    cancel: CancellationToken,
   }
 
   #[local]
@@ -85,7 +81,7 @@ mod inner_app {
 
     let _uart_tx_pin = pins.gpio0.into_mode::<hal::gpio::FunctionUart>();
     let _uart_rx_pin = pins.gpio1.into_mode::<hal::gpio::FunctionUart>();
-    let uart = UartPeripheral::new(ctx.device.UART0, &mut ctx.device.RESETS)
+    let _uart = UartPeripheral::new(ctx.device.UART0, &mut ctx.device.RESETS)
       .enable(
         hal::uart::common_configs::_115200_8_N_1,
         clocks.peripheral_clock.into(),
@@ -93,6 +89,7 @@ mod inner_app {
       .unwrap();
 
     let show: Option<Box<dyn Show + Send>> = Some(Box::new(show::UniformShow::new(Color::WHITE)));
+    let cancel = CancellationToken::default();
 
     let show_task = show::ShowTask::init(
       pins.gpio2.into_mode(),
@@ -108,11 +105,7 @@ mod inner_app {
     );
 
     (
-      Shared {
-        _led: led,
-        show,
-        _uart: uart,
-      },
+      Shared { show, cancel },
       Local {
         show_task,
         remote_task,
@@ -125,7 +118,7 @@ mod inner_app {
   extern "Rust" {
     #[task(
         priority = 1,
-        shared = [show],
+        shared = [show, cancel],
         local = [show_task],
     )]
     fn show_task(ctx: show_task::Context);
@@ -133,7 +126,7 @@ mod inner_app {
     #[task(
         binds = IO_IRQ_BANK0,
         priority = 2,
-        shared = [show],
+        shared = [show, cancel],
         local = [remote_task],
     )]
     fn remote_task(ctx: remote_task::Context);

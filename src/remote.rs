@@ -10,7 +10,7 @@ use rp_pico::{
   hal::{gpio, Timer},
   pac,
 };
-use rtic::Mutex;
+use rtic::mutex_prelude::TupleExt02;
 
 type IrProto = infrared::protocol::Nec;
 type IrCommand = <IrProto as infrared::Protocol>::Cmd;
@@ -58,7 +58,7 @@ pub fn remote_task(ctx: remote_task::Context) {
     timer,
     last_event_instant,
   } = ctx.local.remote_task;
-  let SharedResources { mut show } = ctx.shared;
+  let SharedResources { show, cancel } = ctx.shared;
 
   let pin = ir_receiver.pin();
   pin.clear_interrupt(gpio::Interrupt::EdgeHigh);
@@ -71,7 +71,12 @@ pub fn remote_task(ctx: remote_task::Context) {
   match ir_receiver.event(dt) {
     Ok(Some(cmd)) => match cmd.action() {
       Some(action) => match next_show(action) {
-        Some(next_show) => show.lock(|show| *show = Some(next_show)),
+        Some(next_show) => {
+          (show, cancel).lock(|show, cancel| {
+            *show = Some(next_show);
+            cancel.request();
+          });
+        }
         None => {}
       },
       None => {}
