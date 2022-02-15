@@ -14,11 +14,15 @@ use rp_pico::{
 use rtic::Mutex;
 
 pub mod demo;
+pub mod null;
 pub mod quick;
+pub mod random;
 pub mod uniform;
 
 pub use demo::DemoShow;
+pub use null::NullShow;
 pub use quick::QuickShow;
+pub use random::RandomShow;
 pub use uniform::UniformShow;
 
 pub type LightsPin = gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>;

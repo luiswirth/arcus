@@ -95,9 +95,9 @@ fn next_show(action: irrc::Action) -> Option<Box<dyn Show + Send>> {
   }
 
   match action {
-    irrc::Action::Stop => uni!(Color::NONE),
+    irrc::Action::Stop => Some(Box::new(show::NullShow::default())),
     irrc::Action::Play_Pause => None,
-    irrc::Action::Random => None,
+    irrc::Action::Random => Some(Box::new(show::RandomShow::default())),
     irrc::Action::Time => None,
     irrc::Action::Repeat => None,
     irrc::Action::One => uni!(Color::RED),
@@ -110,7 +110,7 @@ fn next_show(action: irrc::Action) -> Option<Box<dyn Show + Send>> {
     irrc::Action::Eight => uni!(Color::RGB),
     irrc::Action::Nine => uni!(Color::RGBW),
     //irrc::Action::? => None,
-    irrc::Action::Zero => None,
+    irrc::Action::Zero => uni!(Color::NONE),
     irrc::Action::Prog => Some(Box::new(show::DemoShow::default())),
     irrc::Action::Prev => None,
     irrc::Action::Next => None,

@@ -63,12 +63,6 @@ impl Color {
 
   pub fn into_hsv(self) -> [Fix32; 3] {
     unimplemented!()
-    //// TODO: necessary conversion?
-    ////let rgb = palette::rgb::LinSrgb::new(self.r, self.g, self.b);
-    //let rgb = palette::rgb::Rgb::new(self.r, self.g, self.b);
-    //let rgb: palette::Hsv = palette::IntoColor::into_color(rgb);
-    //let comps = rgb.into_components();
-    //[comps.0.to_positive_degrees() / 360.0, comps.1, comps.2]
   }
 }
 
@@ -153,10 +147,9 @@ pub fn unpack(c: u32) -> [u8; 4] {
 }
 
 impl rand::distributions::Distribution<Color> for rand::distributions::Standard {
-  fn sample<R: rand::Rng + ?Sized>(&self, _rng: &mut R) -> Color {
-    unimplemented!()
-    //let hue = rng.gen::<FixNorm>();
-    //Color::from_hsv(hue, ONE, ONE)
+  fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Color {
+    let hue = nl!(rng.gen::<f32>());
+    Color::from_hsv(hue, ONE, ONE)
   }
 }
 
