@@ -44,8 +44,8 @@ impl Show for DemoShow {
           ctrl.set(l, color);
           ctrl.display();
           asm_delay.delay_ms(16);
+          return_cancel!(cancel);
         }
-        return_cancel!(cancel);
       }
     }
   }

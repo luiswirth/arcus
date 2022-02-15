@@ -16,6 +16,7 @@ cortex-m = "0.7.4"
 cortex-m-rt = "0.7.1"
 #cortex-m-rtic = "1.0.0"
 cortex-m-rtic = { git = "https://github.com/LU15W1R7H/cortex-m-rtic" }
+systick-monotonic = "1.0.0"
 alloc-cortex-m = "0.4.2"
 cortex-m-semihosting = "0.3.7"
 panic-semihosting = "0.5.6"
@@ -23,16 +24,10 @@ rp2040-boot2 = "0.2.0"
 
 rp-pico = "0.2.0"
 pio = "0.1.0"
+infrared = "0.13.0"
 
 embedded-hal = "0.2.7"
 embedded-time = "0.12.1"
 
-nb = "1.0.0"
-num-traits = { version = "0.2.14", default-features = false, features = [ "libm" ] }
-rand = { version = "0.8.4", default-features = false, features = [ "small_rng" ] }
-palette = { version = "0.6.0", default-features = false, features = [ "libm" ] }
-self_cell = "0.10.2"
 fixed = "1.12.0"
-cordic = "0.1.5"
-systick-monotonic = "1.0.0"
-infrared = "0.13.0"
+rand = { version = "0.8.4", default-features = false, features = [ "small_rng" ] }
