@@ -30,4 +30,4 @@ embedded-hal = "0.2.7"
 embedded-time = "0.12.1"
 
 fixed = "1.12.0"
-rand = { version = "0.8.4", default-features = false, features = [ "small_rng" ] }
+rand = { version = "0.8.5", default-features = false, features = [ "small_rng" ] }

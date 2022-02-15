@@ -23,7 +23,7 @@ type LightsPin = gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>;
 const LIGHTS_PIN_IDX: u8 = 2;
 
 impl Lights {
-  pub const N: usize = 20; //4 * 60;
+  pub const N: usize = 25; //4 * 60;
   pub fn init(
     pio_instance: pac::PIO0,
     resets: &mut pac::RESETS,

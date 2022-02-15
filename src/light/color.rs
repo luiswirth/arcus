@@ -1,25 +1,25 @@
-use arclib::{nl, FixNorm, ONE, ZERO};
+use arclib::{nl, Fix32, ONE, ZERO};
 
 pub type RawColor = u32;
 pub type RawChannel = u8;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Color {
-  pub r: FixNorm,
-  pub g: FixNorm,
-  pub b: FixNorm,
-  pub w: FixNorm,
+  pub r: Fix32,
+  pub g: Fix32,
+  pub b: Fix32,
+  pub w: Fix32,
 }
 
 impl Color {
-  pub const fn new(r: FixNorm, g: FixNorm, b: FixNorm, w: FixNorm) -> Self {
+  pub const fn new(r: Fix32, g: Fix32, b: Fix32, w: Fix32) -> Self {
     Self { r, g, b, w }
   }
 
-  pub const fn into_channel_array(self) -> [FixNorm; 4] {
+  pub const fn into_channel_array(self) -> [Fix32; 4] {
     [self.r, self.g, self.b, self.w]
   }
-  pub const fn from_channel_array(channels: [FixNorm; 4]) -> Self {
+  pub const fn from_channel_array(channels: [Fix32; 4]) -> Self {
     Self::new(channels[0], channels[1], channels[2], channels[3])
   }
 
@@ -38,38 +38,30 @@ impl Color {
   }
 
   #[allow(clippy::zero_prefixed_literal)]
-  pub fn from_hsv(mut h: FixNorm, s: FixNorm, v: FixNorm) -> Self {
-    h *= nl!(360u32);
-    let c = v * s;
-    let x = c * (ONE - ((h / nl!(60u32)) % nl!(2u32) - ONE));
-    let m = v - c;
-
-    let c0 = nl!(000u32)..=nl!(060u32);
-    let c1 = nl!(060u32)..=nl!(120u32);
-    let c2 = nl!(120u32)..=nl!(180u32);
-    let c3 = nl!(180u32)..=nl!(240u32);
-    let c4 = nl!(240u32)..=nl!(300u32);
-    let c5 = nl!(300u32)..=nl!(360u32);
-
-    let [r, g, b]: [FixNorm; 3] = match h {
-      c if c0.contains(&c) => [c, x, ZERO],
-      c if c1.contains(&c) => [x, c, ZERO],
-      c if c2.contains(&c) => [ZERO, c, x],
-      c if c3.contains(&c) => [ZERO, x, c],
-      c if c4.contains(&c) => [x, ZERO, c],
-      c if c5.contains(&c) => [c, ZERO, x],
-      _ => [c, x, ZERO],
+  pub fn from_hsv(mut hue: Fix32, sat: Fix32, val: Fix32) -> Self {
+    hue *= nl!(360u16);
+    let c = val * sat;
+    let v = (hue / nl!(60u16)) % nl!(2u16) - ONE;
+    let v = if v < ZERO { -v } else { v };
+    let x = c * (ONE - v);
+    let m = val - c;
+    let (r, g, b) = if hue < nl!(60u16) {
+      (c, x, ZERO)
+    } else if hue < nl!(120u16) {
+      (x, c, ZERO)
+    } else if hue < nl!(180u16) {
+      (ZERO, c, x)
+    } else if hue < nl!(240u16) {
+      (ZERO, x, c)
+    } else if hue < nl!(300u16) {
+      (x, ZERO, c)
+    } else {
+      (c, ZERO, x)
     };
     Self::new(r + m, g + m, b + m, ZERO)
-    //let hsv = palette::Hsv::new(h * 360.0, s, v);
-    //let rgb: palette::rgb::Rgb = palette::FromColor::from_color(hsv);
-    //// TODO: necessary?
-    //let rgb = rgb.into_linear();
-    //let comps = rgb.into_components();
-    //Self::new(nl!(comps.0), nl!(comps.1), nl!(comps.2), nl!(0u32))
   }
 
-  pub fn into_hsv(self) -> [FixNorm; 3] {
+  pub fn into_hsv(self) -> [Fix32; 3] {
     unimplemented!()
     //// TODO: necessary conversion?
     ////let rgb = palette::rgb::LinSrgb::new(self.r, self.g, self.b);
@@ -97,7 +89,7 @@ impl Color {
 }
 
 impl core::ops::Index<usize> for Color {
-  type Output = FixNorm;
+  type Output = Fix32;
 
   fn index(&self, index: usize) -> &Self::Output {
     match index {
@@ -121,7 +113,7 @@ impl core::ops::IndexMut<usize> for Color {
   }
 }
 
-pub fn normalize([r, g, b, w]: [u8; 4]) -> [FixNorm; 4] {
+pub fn normalize([r, g, b, w]: [u8; 4]) -> [Fix32; 4] {
   [
     nl!(r) / nl!(255u8),
     nl!(g) / nl!(255u8),
@@ -130,7 +122,7 @@ pub fn normalize([r, g, b, w]: [u8; 4]) -> [FixNorm; 4] {
   ]
 }
 
-pub fn denormalize([r, g, b, w]: [FixNorm; 4]) -> [u8; 4] {
+pub fn denormalize([r, g, b, w]: [Fix32; 4]) -> [u8; 4] {
   [
     (r * nl!(255u8)).to_num(),
     (g * nl!(255u8)).to_num(),
@@ -170,7 +162,7 @@ impl rand::distributions::Distribution<Color> for rand::distributions::Standard 
 
 impl Color {
   #[must_use]
-  pub fn scale_rgbw(self, scalar: FixNorm) -> Self {
+  pub fn scale_rgbw(self, scalar: Fix32) -> Self {
     Color::new(
       scalar * self.r,
       scalar * self.g,
@@ -204,7 +196,7 @@ impl Color {
   //}
 
   #[must_use]
-  pub fn gradient_rgbw(self, other: Self, t: FixNorm) -> Self {
+  pub fn gradient_rgbw(self, other: Self, t: Fix32) -> Self {
     Color::new(
       (ONE - t) * self.r + t * other.r,
       (ONE - t) * self.g + t * other.g,

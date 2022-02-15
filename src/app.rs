@@ -88,7 +88,7 @@ mod inner_app {
       )
       .unwrap();
 
-    let show: Option<Box<dyn Show + Send>> = Some(Box::new(show::UniformShow::new(Color::WHITE)));
+    let show: Option<Box<dyn Show + Send>> = Some(Box::new(show::UniformShow::new(Color::NONE)));
     let cancel = CancellationToken::default();
 
     let show_task = show::ShowTask::init(
