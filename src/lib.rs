@@ -7,6 +7,6 @@ pub const ONE: Fix32 = Fix32::ONE;
 #[macro_export]
 macro_rules! nl {
   ($l: expr) => {
-    Fix32::from_num($l)
+    ::arclib::Fix32::from_num($l)
   };
 }

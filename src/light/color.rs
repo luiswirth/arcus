@@ -80,6 +80,18 @@ impl Color {
   pub const YELLOW: Self = Self::new(ONE, ONE, ZERO, ZERO);
   pub const MAGENTA: Self = Self::new(ONE, ZERO, ONE, ZERO);
   pub const CYAN: Self = Self::new(ZERO, ONE, ONE, ZERO);
+
+  pub const STANDARD_PALETTE: [Color; 9] = [
+    Color::RED,
+    Color::GREEN,
+    Color::BLUE,
+    Color::WHITE,
+    Color::RGB,
+    Color::RGBW,
+    Color::YELLOW,
+    Color::MAGENTA,
+    Color::CYAN,
+  ];
 }
 
 impl core::ops::Index<usize> for Color {

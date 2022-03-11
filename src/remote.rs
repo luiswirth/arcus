@@ -89,26 +89,27 @@ pub fn remote_task(ctx: remote_task::Context) {
 
 fn next_show(action: irrc::Action) -> Option<Box<dyn Show + Send>> {
   macro_rules! uni {
-    ($c:path) => {
+    ($c:expr) => {
       Some(Box::new(show::UniformShow::new($c)))
     };
   }
 
+  let palette = Color::STANDARD_PALETTE;
   match action {
     irrc::Action::Stop => Some(Box::new(show::NullShow::default())),
     irrc::Action::Play_Pause => None,
     irrc::Action::Random => Some(Box::new(show::RandomShow::default())),
     irrc::Action::Time => None,
-    irrc::Action::Repeat => None,
-    irrc::Action::One => uni!(Color::RED),
-    irrc::Action::Two => uni!(Color::GREEN),
-    irrc::Action::Three => uni!(Color::BLUE),
-    irrc::Action::Four => uni!(Color::YELLOW),
-    irrc::Action::Five => uni!(Color::MAGENTA),
-    irrc::Action::Six => uni!(Color::CYAN),
-    irrc::Action::Seven => uni!(Color::WHITE),
-    irrc::Action::Eight => uni!(Color::RGB),
-    irrc::Action::Nine => uni!(Color::RGBW),
+    irrc::Action::Repeat => Some(Box::new(show::QuickShow::default())),
+    irrc::Action::One => uni!(palette[0]),
+    irrc::Action::Two => uni!(palette[1]),
+    irrc::Action::Three => uni!(palette[2]),
+    irrc::Action::Four => uni!(palette[3]),
+    irrc::Action::Five => uni!(palette[4]),
+    irrc::Action::Six => uni!(palette[5]),
+    irrc::Action::Seven => uni!(palette[6]),
+    irrc::Action::Eight => uni!(palette[7]),
+    irrc::Action::Nine => uni!(palette[8]),
     //irrc::Action::? => None,
     irrc::Action::Zero => uni!(Color::NONE),
     irrc::Action::Prog => Some(Box::new(show::DemoShow::default())),

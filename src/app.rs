@@ -21,7 +21,6 @@ mod inner_app {
   use systick_monotonic::*;
 
   use crate::{
-    light::color::Color,
     remote,
     show::{self, CancellationToken, Show},
     ALLOCATOR,
@@ -88,7 +87,7 @@ mod inner_app {
       )
       .unwrap();
 
-    let show: Option<Box<dyn Show + Send>> = Some(Box::new(show::UniformShow::new(Color::NONE)));
+    let show: Option<Box<dyn Show + Send>> = None;
     let cancel = CancellationToken::default();
 
     let show_task = show::ShowTask::init(
