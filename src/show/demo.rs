@@ -1,11 +1,11 @@
-use arclib::{nl, Fix32, ONE};
+use arclib::{nl, ONE};
 use embedded_hal::blocking::delay::DelayMs;
 
 use crate::{
   app::shared_resources::cancel_lock,
   light::{
-    color::Color,
-    controller::{MemoryController, MemoryControllerExt, U32Memory, U32MemoryController},
+    color::NormColor,
+    controller::{MemoryController, MemoryControllerExt, U32MemoryController},
     Lights,
   },
   util::AsmDelay,
@@ -19,14 +19,13 @@ pub struct DemoShow;
 
 impl Show for DemoShow {
   fn run(&mut self, lights: &mut Lights, mut asm_delay: AsmDelay, cancel: &mut cancel_lock) {
-    let mut memory = U32Memory::new();
-    let mut ctrl = U32MemoryController::new(lights, &mut memory, asm_delay);
+    let mut ctrl = U32MemoryController::new(lights, asm_delay);
 
-    ctrl.set_all(Color::NONE);
+    ctrl.set_all(NormColor::NONE);
 
     loop {
       // all colors loading bar
-      for color in Color::STANDARD_PALETTE {
+      for color in NormColor::STANDARD_PALETTE {
         for l in 0..Lights::N {
           ctrl.set(l, color);
           ctrl.display();
@@ -34,7 +33,7 @@ impl Show for DemoShow {
           return_cancel!(cancel);
         }
         for l in 0..Lights::N {
-          ctrl.set(l, Color::NONE);
+          ctrl.set(l, NormColor::NONE);
           ctrl.display();
           asm_delay.delay_ms(2);
           return_cancel!(cancel);
@@ -44,7 +43,7 @@ impl Show for DemoShow {
           ctrl.set_all(color.scale_rgbw(brightness));
           ctrl.display();
         }
-        ctrl.set_all(Color::NONE);
+        ctrl.set_all(NormColor::NONE);
         ctrl.display();
       }
       for shift in 0..360u32 {
@@ -52,7 +51,7 @@ impl Show for DemoShow {
         for l in 0..Lights::N {
           let lf = nl!(l) / nl!(Lights::N - 1);
           let hue = (shiftf + lf).rem_euclid(ONE);
-          let color = Color::from_hsv(hue, ONE, ONE);
+          let color = NormColor::from_hsv(hue, ONE, ONE);
           ctrl.set(l, color);
         }
         ctrl.display();

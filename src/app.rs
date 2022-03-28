@@ -78,9 +78,11 @@ mod inner_app {
     let mut led: LedPin = pins.led.into_push_pull_output();
     led.set_low().unwrap();
 
-    let _uart_tx_pin = pins.gpio0.into_mode::<hal::gpio::FunctionUart>();
-    let _uart_rx_pin = pins.gpio1.into_mode::<hal::gpio::FunctionUart>();
-    let _uart = UartPeripheral::new(ctx.device.UART0, &mut ctx.device.RESETS)
+    let uart_pins = (
+      pins.gpio0.into_mode::<hal::gpio::FunctionUart>(),
+      pins.gpio1.into_mode::<hal::gpio::FunctionUart>(),
+    );
+    let _uart = UartPeripheral::new(ctx.device.UART0, uart_pins, &mut ctx.device.RESETS)
       .enable(
         hal::uart::common_configs::_115200_8_N_1,
         clocks.peripheral_clock.into(),

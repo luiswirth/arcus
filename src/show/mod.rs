@@ -13,16 +13,24 @@ use rp_pico::{
 };
 use rtic::Mutex;
 
+pub mod clock;
+pub mod data;
 pub mod demo;
+pub mod gradient;
 pub mod null;
 pub mod quick;
 pub mod random;
+pub mod snake;
 pub mod uniform;
 
+pub use clock::{RgbClockShow, SeparatedClockShow};
+pub use data::ByteShow;
 pub use demo::DemoShow;
+pub use gradient::GradientShow;
 pub use null::NullShow;
 pub use quick::QuickShow;
 pub use random::RandomShow;
+pub use snake::SnakeShow;
 pub use uniform::UniformShow;
 
 pub type LightsPin = gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>;

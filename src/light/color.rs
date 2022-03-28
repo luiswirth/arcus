@@ -4,14 +4,14 @@ pub type RawColor = u32;
 pub type RawChannel = u8;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Color {
+pub struct NormColor {
   pub r: Fix32,
   pub g: Fix32,
   pub b: Fix32,
   pub w: Fix32,
 }
 
-impl Color {
+impl NormColor {
   pub const fn new(r: Fix32, g: Fix32, b: Fix32, w: Fix32) -> Self {
     Self { r, g, b, w }
   }
@@ -67,7 +67,7 @@ impl Color {
 }
 
 /// Color definitions
-impl Color {
+impl NormColor {
   pub const RED: Self = Self::new(ONE, ZERO, ZERO, ZERO);
   pub const GREEN: Self = Self::new(ZERO, ONE, ZERO, ZERO);
   pub const BLUE: Self = Self::new(ZERO, ZERO, ONE, ZERO);
@@ -81,20 +81,20 @@ impl Color {
   pub const MAGENTA: Self = Self::new(ONE, ZERO, ONE, ZERO);
   pub const CYAN: Self = Self::new(ZERO, ONE, ONE, ZERO);
 
-  pub const STANDARD_PALETTE: [Color; 9] = [
-    Color::RED,
-    Color::GREEN,
-    Color::BLUE,
-    Color::WHITE,
-    Color::RGB,
-    Color::RGBW,
-    Color::YELLOW,
-    Color::MAGENTA,
-    Color::CYAN,
+  pub const STANDARD_PALETTE: [NormColor; 9] = [
+    NormColor::RED,
+    NormColor::GREEN,
+    NormColor::BLUE,
+    NormColor::WHITE,
+    NormColor::RGB,
+    NormColor::RGBW,
+    NormColor::YELLOW,
+    NormColor::MAGENTA,
+    NormColor::CYAN,
   ];
 }
 
-impl core::ops::Index<usize> for Color {
+impl core::ops::Index<usize> for NormColor {
   type Output = Fix32;
 
   fn index(&self, index: usize) -> &Self::Output {
@@ -107,7 +107,7 @@ impl core::ops::Index<usize> for Color {
     }
   }
 }
-impl core::ops::IndexMut<usize> for Color {
+impl core::ops::IndexMut<usize> for NormColor {
   fn index_mut(&mut self, index: usize) -> &mut Self::Output {
     match index {
       0 => &mut self.r,
@@ -158,17 +158,17 @@ pub fn unpack(c: u32) -> [u8; 4] {
   [r, g, b, w]
 }
 
-impl rand::distributions::Distribution<Color> for rand::distributions::Standard {
-  fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Color {
+impl rand::distributions::Distribution<NormColor> for rand::distributions::Standard {
+  fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> NormColor {
     let hue = nl!(rng.gen::<f32>());
-    Color::from_hsv(hue, ONE, ONE)
+    NormColor::from_hsv(hue, ONE, ONE)
   }
 }
 
-impl Color {
+impl NormColor {
   #[must_use]
   pub fn scale_rgbw(self, scalar: Fix32) -> Self {
-    Color::new(
+    NormColor::new(
       scalar * self.r,
       scalar * self.g,
       scalar * self.b,
@@ -178,7 +178,7 @@ impl Color {
 
   #[must_use]
   pub fn add_rgbw(self, other: Self) -> Self {
-    Color::new(
+    NormColor::new(
       self.r + other.r,
       self.g + other.g,
       self.b + other.b,
@@ -191,30 +191,26 @@ impl Color {
     self.gradient_rgbw(other, ONE / nl!(2))
   }
 
-  //pub fn mix_hsv(self, other: Self) -> Self {
-  //  let this = self.into_hsv();
-  //  let other = other.into_hsv();
-  //  let h = (this[0] + other[0]) / nl!(2);
-  //  let s = (this[1] + other[1]) / nl!(2);
-  //  let v = (this[2] + other[2]) / nl!(2);
-  //  Color::from_hsv(h, s, v)
-  //}
+  pub fn mix_hsv(self, other: Self) -> Self {
+    self.gradient_hsv(other, ONE / nl!(2))
+  }
 
   #[must_use]
   pub fn gradient_rgbw(self, other: Self, t: Fix32) -> Self {
-    Color::new(
+    NormColor::new(
       (ONE - t) * self.r + t * other.r,
       (ONE - t) * self.g + t * other.g,
       (ONE - t) * self.b + t * other.b,
       (ONE - t) * self.w + t * other.w,
     )
   }
-  //pub fn gradient_hsv(self, other: Self, t: FixNorm) -> Self {
-  //  let this = self.into_hsv();
-  //  Color::from_hsv(
-  //    (ONE - t) * this[0] + t * other.r,
-  //    (ONE - t) * this[1] + t * other.g,
-  //    (ONE - t) * this[2] + t * other.b,
-  //  )
-  //}
+  pub fn gradient_hsv(self, other: Self, t: Fix32) -> Self {
+    let this = self.into_hsv();
+    let other = other.into_hsv();
+    Self::from_hsv(
+      (ONE - t) * this[0] + t * other[0],
+      (ONE - t) * this[1] + t * other[1],
+      (ONE - t) * this[2] + t * other[2],
+    )
+  }
 }

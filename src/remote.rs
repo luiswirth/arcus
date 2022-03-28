@@ -1,6 +1,6 @@
 use crate::{
   app::remote_task::{self, SharedResources},
-  light::color::Color,
+  light::color::NormColor,
   show::{self, Show},
 };
 
@@ -87,37 +87,60 @@ pub fn remote_task(ctx: remote_task::Context) {
   };
 }
 
+#[rustfmt::skip]
+fn number_from_action(action: irrc::Action) -> Option<usize> {
+  match action {
+    irrc::Action::Zero  => Some(0),
+    irrc::Action::One   => Some(1),
+    irrc::Action::Two   => Some(2),
+    irrc::Action::Three => Some(3),
+    irrc::Action::Four  => Some(4),
+    irrc::Action::Five  => Some(5),
+    irrc::Action::Six   => Some(6),
+    irrc::Action::Seven => Some(7),
+    irrc::Action::Eight => Some(8),
+    irrc::Action::Nine  => Some(9),
+    _ => None,
+  }
+}
+
+fn color_from_action(action: irrc::Action) -> Option<NormColor> {
+  number_from_action(action).map(|i| {
+    if i == 0 {
+      NormColor::NONE
+    } else {
+      NormColor::STANDARD_PALETTE[i - 1]
+    }
+  })
+}
+
+#[rustfmt::skip]
 fn next_show(action: irrc::Action) -> Option<Box<dyn Show + Send>> {
-  macro_rules! uni {
-    ($c:expr) => {
-      Some(Box::new(show::UniformShow::new($c)))
+  macro_rules! show {
+    ($s:expr) => {
+      Some(Box::new($s))
     };
   }
 
-  let palette = Color::STANDARD_PALETTE;
-  match action {
-    irrc::Action::Stop => Some(Box::new(show::NullShow::default())),
-    irrc::Action::Play_Pause => None,
-    irrc::Action::Random => Some(Box::new(show::RandomShow::default())),
-    irrc::Action::Time => None,
-    irrc::Action::Repeat => Some(Box::new(show::QuickShow::default())),
-    irrc::Action::One => uni!(palette[0]),
-    irrc::Action::Two => uni!(palette[1]),
-    irrc::Action::Three => uni!(palette[2]),
-    irrc::Action::Four => uni!(palette[3]),
-    irrc::Action::Five => uni!(palette[4]),
-    irrc::Action::Six => uni!(palette[5]),
-    irrc::Action::Seven => uni!(palette[6]),
-    irrc::Action::Eight => uni!(palette[7]),
-    irrc::Action::Nine => uni!(palette[8]),
-    //irrc::Action::? => None,
-    irrc::Action::Zero => uni!(Color::NONE),
-    irrc::Action::Prog => Some(Box::new(show::DemoShow::default())),
-    irrc::Action::Prev => None,
-    irrc::Action::Next => None,
-    irrc::Action::Rewind => None,
-    irrc::Action::Forward => None,
-    _ => None,
+  const BYTES: &[u8] = &[0b1010_1010, 0b1111_1111, 0b0000_0000, 0b1100_1100];
+
+  if let Some(color) = color_from_action(action) {
+    show!(show::UniformShow::new(color))
+  } else {
+    match action {
+      irrc::Action::Stop       => show!(show::NullShow::default()),
+      irrc::Action::Play_Pause => show!(show::SnakeShow::default()),
+      irrc::Action::Random     => show!(show::RandomShow::default()),
+      irrc::Action::Time       => show!(show::SeparatedClockShow::default()),
+      irrc::Action::Repeat     => show!(show::ByteShow::new(BYTES)),
+      //irrc::Action::?        => None,
+      //irrc::Action::Prog       => show!(show::DemoShow::default()),
+      irrc::Action::Prev       => None,
+      irrc::Action::Next       => None,
+      irrc::Action::Rewind     => None,
+      irrc::Action::Forward    => None,
+      _ => None,
+    }
   }
 }
 

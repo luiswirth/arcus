@@ -11,9 +11,8 @@ use rp_pico::{
   pac,
 };
 
+use self::color::NormColor;
 use crate::util::AsmDelay;
-
-use self::color::Color;
 
 pub struct Lights {
   tx: Tx<(PIO0, SM0)>,
@@ -76,16 +75,13 @@ impl Lights {
     Self { tx }
   }
 
-  fn force_write(&mut self, word: u32) {
-    while !self.tx.write(word) {}
-  }
-
   fn write_iter(&mut self, words: impl Iterator<Item = u32>, mut asm_delay: AsmDelay) {
     for word in words {
-      self.force_write(word);
+      // idle write until the fifo isn't full anymore
+      while !self.tx.write(word) {}
     }
     // TODO: instead of wait, start a countdown and wait on the next iteration
-    // wait until fifo empty
+    // wait until fifo is empty
     while !self.tx.is_empty() {}
     asm_delay.delay_us(80);
   }

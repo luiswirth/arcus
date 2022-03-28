@@ -22,12 +22,12 @@ cortex-m-semihosting = "0.3.7"
 panic-semihosting = "0.5.6"
 rp2040-boot2 = "0.2.0"
 
-rp-pico = "0.2.0"
-pio = "0.1.0"
+rp-pico = "0.3.0"
+pio = "0.2.0"
 infrared = "0.13.0"
 
 embedded-hal = "0.2.7"
 embedded-time = "0.12.1"
 
-fixed = "1.13.1"
+fixed = "1.14.0"
 rand = { version = "0.8.5", default-features = false, features = [ "small_rng" ] }

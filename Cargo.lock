@@ -50,12 +50,11 @@ checksum = "8da52d66c7071e2e3fa2a1e5c6d088fec47b593032b254f5e980de8ea54454d6"
 
 [[package]]
 name = "atomic-polyfill"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee6adc1648f03fbc1bc1b5cf0f2fdfb5edbc96215b711edcfe6ce2641ef9b347"
+checksum = "4d862f14e042f75b95236d4ef1bb3d5c170964082d1e1e9c3ce689a2cbee217c"
 dependencies = [
  "critical-section",
- "riscv-target",
 ]
 
 [[package]]
@@ -242,9 +241,9 @@ checksum = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 
 [[package]]
 name = "fixed"
-version = "1.13.1"
+version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3342b127378d13cfdbd56de8d7e7feec33a9772d5657b9605e59a6e4a337e36"
+checksum = "86d3f4dd10ddfcb0bd2b2efe9f18aff37ed48265fda3e20e5d53f046aba9d50a"
 dependencies = [
  "az",
  "bytemuck",
@@ -468,15 +467,15 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "pio"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "593b4978951e32f8dd5b76203503a9dd8dc4665e4bcb4f7fe8e03e33b9f7abc0"
+checksum = "0fd642eada42517e6589cd7f5e830630324aec628fb4aa719000f8801e40c0a2"
 dependencies = [
  "arrayvec",
  "num_enum",
@@ -518,9 +517,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.15"
+version = "1.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "864d3e96a899863136fc6e99f3d7cae289dafe43bf2c5ac19b70df7210c0a145"
+checksum = "632d02bff7f874a36f33ea8bb416cd484b90cc66c1194b1a1110d067a7013f58"
 dependencies = [
  "proc-macro2",
 ]
@@ -580,9 +579,9 @@ dependencies = [
 
 [[package]]
 name = "rp-pico"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99fc2d1b3bf764c02ee395e520dad1953377e7d68af56713620365e43f27cf29"
+checksum = "0448eedbea7c5af834a7270fab470f7a815777e3ac09be135fb3f06afd163e7b"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
@@ -605,9 +604,9 @@ dependencies = [
 
 [[package]]
 name = "rp2040-hal"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4cc5eed93ae7e2432580923fc5d5797c14b2bf215e1ab84e828f211881393b9"
+checksum = "e4bca865e0a5a0aba04992ede50d7585f3dba13863943445b5ad1c81270e112e"
 dependencies = [
  "cortex-m",
  "critical-section",
@@ -626,9 +625,9 @@ dependencies = [
 
 [[package]]
 name = "rp2040-pac"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db04fc92670038074acf20ad422130b735897937812a1761b17cfc26d56c253f"
+checksum = "13a6106d5db01c7171a39c1f7696780912db9b42fe7ac722db60069c8904ea7c"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
@@ -722,9 +721,9 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "syn"
-version = "1.0.87"
+version = "1.0.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e59d925cf59d8151f25a3bedf97c9c157597c9df7324d32d68991cc399ed08b"
+checksum = "ea297be220d52398dcc07ce15a209fce436d361735ac1db700cab3b6cdfb9f54"
 dependencies = [
  "proc-macro2",
  "quote",
