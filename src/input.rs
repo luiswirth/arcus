@@ -1,4 +1,5 @@
 use alloc::boxed::Box;
+use arclib::nl;
 use infrared::remotecontrol::Action;
 use rtic::Mutex;
 
@@ -35,6 +36,9 @@ pub fn input_task(ctx: input_task::Context) {
 
   match &state {
     InputState::Waiting => match remote_action {
+      Action::Rewind => {
+        configuration.lock(|settings| settings.brightness -= nl!(0.1));
+      }
       Action::Play_Pause => {
         *state = InputState::ShowSelection;
       }
