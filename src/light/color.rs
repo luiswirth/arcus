@@ -3,7 +3,7 @@ use arclib::{nl, Fix32, ONE, ZERO};
 pub type RawColor = u32;
 pub type RawChannel = u8;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct NormColor {
   pub r: Fix32,
   pub g: Fix32,

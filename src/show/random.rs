@@ -1,13 +1,9 @@
 use rand::{Rng, SeedableRng};
 
 use crate::{
-  app::{monotonics, shared_resources::cancel_lock},
-  light::{
-    controller::{MemoryController, U32MemoryController},
-    Lights,
-  },
+  app::monotonics,
+  light::{controller::MemoryController, Lights},
   return_cancel,
-  util::AsmDelay,
 };
 
 use super::Show;
@@ -16,9 +12,14 @@ use super::Show;
 pub struct RandomShow;
 
 impl Show for RandomShow {
-  fn run(&mut self, lights: &mut Lights, asm_delay: AsmDelay, cancel: &mut cancel_lock) {
-    let mut ctrl = U32MemoryController::new(lights, asm_delay);
-
+  fn run(
+    &mut self,
+    cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
+    ctrl: &mut crate::light::controller::U32MemoryController,
+    _asm_delay: crate::util::AsmDelay,
+    _remote_input: &mut crate::app::shared_resources::remote_input_lock,
+    _configuration: &mut crate::app::shared_resources::configuration_lock,
+  ) {
     let mut rng = rand::rngs::SmallRng::seed_from_u64(monotonics::now().ticks());
     loop {
       for l in 0..Lights::N {

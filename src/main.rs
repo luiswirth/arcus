@@ -4,6 +4,8 @@
 #![allow(clippy::single_match)]
 
 pub mod app;
+pub mod configuration;
+pub mod input;
 pub mod light;
 pub mod remote;
 pub mod show;

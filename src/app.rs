@@ -7,7 +7,6 @@ pub use inner_app::*;
     dispatchers = [TIMER_IRQ_0, TIMER_IRQ_1, TIMER_IRQ_2, TIMER_IRQ_3])
 ]
 mod inner_app {
-  use alloc::boxed::Box;
   use embedded_hal::digital::v2::OutputPin;
   use embedded_time::fixed_point::FixedPoint;
 
@@ -21,8 +20,10 @@ mod inner_app {
   use systick_monotonic::*;
 
   use crate::{
-    remote,
-    show::{self, CancellationToken, Show},
+    configuration::Configuration,
+    input,
+    remote::{self, RemoteInput},
+    show::{self, ShowCancellationToken},
     ALLOCATOR,
   };
 
@@ -34,14 +35,16 @@ mod inner_app {
 
   #[shared]
   struct Shared {
-    show: Option<Box<dyn Show + Send>>,
-    cancel: CancellationToken,
+    configuration: Configuration,
+    remote_input: RemoteInput,
+    show_cancellation_token: ShowCancellationToken,
   }
 
   #[local]
   struct Local {
-    remote_task: remote::RemoteTask,
     show_task: show::ShowTask,
+    input_task: input::InputTask,
+    remote_task: remote::RemoteTask,
   }
 
   #[init]
@@ -89,8 +92,8 @@ mod inner_app {
       )
       .unwrap();
 
-    let show: Option<Box<dyn Show + Send>> = None;
-    let cancel = CancellationToken::default();
+    let configuration = Configuration::default();
+    let remote_input = RemoteInput::default();
 
     let show_task = show::ShowTask::init(
       pins.gpio2.into_mode(),
@@ -98,6 +101,9 @@ mod inner_app {
       &clocks.system_clock,
       &mut ctx.device.RESETS,
     );
+    let show_cancellation_token = ShowCancellationToken::default();
+
+    let input_task = input::InputTask::default();
 
     let remote_task = remote::RemoteTask::init(
       pins.gpio3.into_floating_input(),
@@ -106,28 +112,40 @@ mod inner_app {
     );
 
     (
-      Shared { show, cancel },
+      Shared {
+        configuration,
+        remote_input,
+        show_cancellation_token,
+      },
       Local {
         show_task,
+        input_task,
         remote_task,
       },
       init::Monotonics(mono),
     )
   }
 
-  use crate::{remote::remote_task, show::show_task};
+  use crate::{input::input_task, remote::remote_task, show::show_task};
   extern "Rust" {
     #[task(
         priority = 1,
-        shared = [show, cancel],
+        shared = [show_cancellation_token, configuration, remote_input],
         local = [show_task],
     )]
     fn show_task(ctx: show_task::Context);
 
     #[task(
-        binds = IO_IRQ_BANK0,
         priority = 2,
-        shared = [show, cancel],
+        shared = [configuration, remote_input],
+        local = [input_task],
+    )]
+    fn input_task(ctx: input_task::Context);
+
+    #[task(
+        binds = IO_IRQ_BANK0,
+        priority = 3,
+        shared = [remote_input],
         local = [remote_task],
     )]
     fn remote_task(ctx: remote_task::Context);

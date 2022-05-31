@@ -3,12 +3,12 @@ use crate::{
     self,
     show_task::{self, SharedResources},
   },
-  light::Lights,
+  light::{controller::U32MemoryController, Lights, LightsPin},
   util::AsmDelay,
 };
 
 use rp_pico::{
-  hal::{self, clocks::ClockSource, gpio},
+  hal::{self, clocks::ClockSource},
   pac,
 };
 use rtic::Mutex;
@@ -32,8 +32,6 @@ pub use quick::QuickShow;
 pub use random::RandomShow;
 pub use snake::SnakeShow;
 pub use uniform::UniformShow;
-
-pub type LightsPin = gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>;
 
 pub struct ShowTask {
   lights: Lights,
@@ -59,49 +57,61 @@ impl ShowTask {
 pub fn show_task(ctx: show_task::Context) {
   let ShowTask { lights, asm_delay } = ctx.local.show_task;
   let SharedResources {
-    mut show,
-    mut cancel,
+    mut show_cancellation_token,
+    mut configuration,
+    mut remote_input,
   } = ctx.shared;
-  let show_take = show.lock(|show| show.take());
-  if let Some(mut show_take) = show_take {
-    cancel.lock(|cancel| cancel.reset());
-    Show::run(show_take.as_mut(), lights, *asm_delay, &mut cancel);
-  }
+  let show_take = configuration.lock(|s| s.show.take());
+  if let Some(mut show) = show_take {
+    let mut ctrl = U32MemoryController::new(lights, *asm_delay);
 
+    show_cancellation_token.lock(|token| token.reset());
+    Show::run(
+      show.as_mut(),
+      &mut show_cancellation_token,
+      &mut ctrl,
+      *asm_delay,
+      &mut remote_input,
+      &mut configuration,
+    );
+  }
   show_task::spawn().unwrap();
 }
 
 pub trait Show {
   fn run(
     &mut self,
-    lights: &mut Lights,
+    cancel: &mut app::shared_resources::show_cancellation_token_lock,
+    ctrl: &mut U32MemoryController,
     asm_delay: AsmDelay,
-    cancel: &mut app::shared_resources::cancel_lock,
+    remote_input: &mut app::shared_resources::remote_input_lock,
+    configuration: &mut app::shared_resources::configuration_lock,
   );
 }
 
 #[derive(Default)]
-pub struct CancellationToken {
-  requested: bool,
-}
-impl CancellationToken {
-  fn is_requested(&self) -> bool {
-    self.requested
+pub struct ShowCancellationToken(bool);
+
+impl ShowCancellationToken {
+  pub fn is_requested(&self) -> bool {
+    self.0
   }
 
   pub fn request(&mut self) {
-    self.requested = true;
+    self.0 = true;
   }
 
   fn reset(&mut self) {
-    self.requested = false;
+    self.0 = false;
   }
 }
 
 #[macro_export]
 macro_rules! return_cancel {
-  ($cancel:ident) => {{
-    if ::rtic::Mutex::lock($cancel, |cancel| cancel.is_requested()) {
+  ($cancellation_token_lock:ident) => {{
+    if ::rtic::Mutex::lock($cancellation_token_lock, |cancellation_token| {
+      cancellation_token.is_requested()
+    }) {
       return;
     }
   }};

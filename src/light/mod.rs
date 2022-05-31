@@ -18,7 +18,7 @@ pub struct Lights {
   tx: Tx<(PIO0, SM0)>,
 }
 
-type LightsPin = gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>;
+pub type LightsPin = gpio::Pin<gpio::bank0::Gpio2, gpio::FunctionPio0>;
 const LIGHTS_PIN_IDX: u8 = 2;
 
 impl Lights {

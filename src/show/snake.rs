@@ -2,7 +2,7 @@ use alloc::vec::Vec;
 use rand::{prelude::Distribution, Rng, SeedableRng};
 
 use crate::{
-  app::{monotonics, shared_resources::cancel_lock},
+  app::monotonics,
   light::{
     color::NormColor,
     controller::{MemoryController, MemoryControllerExt, U32MemoryController},
@@ -27,9 +27,14 @@ struct Fruit {
 #[derive(Default)]
 pub struct SnakeShow;
 impl Show for SnakeShow {
-  fn run(&mut self, lights: &mut Lights, asm_delay: AsmDelay, cancel: &mut cancel_lock) {
-    let mut ctrl = U32MemoryController::new(lights, asm_delay);
-
+  fn run(
+    &mut self,
+    cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
+    ctrl: &mut U32MemoryController,
+    _asm_delay: AsmDelay,
+    _remote_input: &mut crate::app::shared_resources::remote_input_lock,
+    _configuration: &mut crate::app::shared_resources::configuration_lock,
+  ) {
     let mut rng = rand::rngs::SmallRng::seed_from_u64(monotonics::now().ticks());
     let pos_distr = rand::distributions::Uniform::new(0, Lights::N);
     let mut snake = Snake {
