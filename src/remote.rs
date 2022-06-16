@@ -1,68 +1,46 @@
 use crate::{
-  app::remote_task::{self, SharedResources},
+  app::{
+    self, monotonics,
+    remote_task::{self, SharedResources},
+  },
   light::color::NormColor,
   show::{self, Show},
 };
 
 use alloc::boxed::Box;
 use infrared::{self as ir, remotecontrol as irrc};
-use rp_pico::{
-  hal::{gpio, Timer},
-  pac,
-};
+use rp_pico::hal::gpio;
 use rtic::mutex_prelude::TupleExt02;
 
 type IrProto = infrared::protocol::Nec;
 type IrCommand = <IrProto as infrared::Protocol>::Cmd;
 pub type IrReceiverPin = gpio::Pin<gpio::bank0::Gpio3, gpio::Input<gpio::Floating>>;
-pub type IrReceiver = infrared::Receiver<IrProto, IrReceiverPin, u32, irrc::Button<NadRc512>>;
+pub type IrReceiver = infrared::Receiver<
+  IrProto,
+  IrReceiverPin,
+  <app::Monotonic as rtic::Monotonic>::Instant,
+  irrc::Button<NadRc512>,
+>;
 
 pub struct RemoteTask {
   ir_receiver: IrReceiver,
-
-  timer: Timer,
-  last_event_instant: u32,
 }
 impl RemoteTask {
-  pub fn init(ir_pin: IrReceiverPin, timer: pac::TIMER, resets: &mut pac::RESETS) -> Self {
+  pub fn init(ir_pin: IrReceiverPin) -> Self {
     ir_pin.set_interrupt_enabled(gpio::Interrupt::EdgeHigh, true);
     ir_pin.set_interrupt_enabled(gpio::Interrupt::EdgeLow, true);
 
-    let ir_receiver: IrReceiver = ir::Receiver::builder()
-      .pin(ir_pin)
-      .protocol::<IrProto>()
-      .remotecontrol(NadRc512)
-      .build();
-
-    let timer = Timer::new(timer, resets);
-
-    Self {
-      ir_receiver,
-
-      timer,
-      last_event_instant: 0,
-    }
+    let ir_receiver = ir::Receiver::with_fugit64(ir_pin);
+    Self { ir_receiver }
   }
 }
 
 pub fn remote_task(ctx: remote_task::Context) {
-  let RemoteTask {
-    ir_receiver,
-
-    timer,
-    last_event_instant,
-  } = ctx.local.remote_task;
+  let RemoteTask { ir_receiver } = ctx.local.remote_task;
   let SharedResources { show, cancel } = ctx.shared;
 
-  let pin = ir_receiver.pin_mut();
-  pin.clear_interrupt(gpio::Interrupt::EdgeHigh);
-  pin.clear_interrupt(gpio::Interrupt::EdgeLow);
-
-  let now = timer.get_counter_low();
-  let dt = now.wrapping_sub(*last_event_instant);
-  *last_event_instant = now;
-
-  match ir_receiver.event(dt) {
+  let now = monotonics::now();
+  match ir_receiver.event_instant(now) {
     Ok(Some(cmd)) => match cmd.action() {
       Some(action) => match next_show(action) {
         Some(next_show) => {
@@ -79,6 +57,10 @@ pub fn remote_task(ctx: remote_task::Context) {
     Err(_e) => {}
     Ok(None) => {}
   };
+
+  let pin = ir_receiver.pin_mut();
+  pin.clear_interrupt(gpio::Interrupt::EdgeHigh);
+  pin.clear_interrupt(gpio::Interrupt::EdgeLow);
 }
 
 #[rustfmt::skip]

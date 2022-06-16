@@ -4,21 +4,14 @@ pub use inner_app::*;
 #[rtic::app(
     device = rp_pico::pac,
     peripherals = true,
-    dispatchers = [TIMER_IRQ_0, TIMER_IRQ_1, TIMER_IRQ_2, TIMER_IRQ_3])
+    dispatchers = [TIMER_IRQ_1, TIMER_IRQ_2, TIMER_IRQ_3])
 ]
 mod inner_app {
   use alloc::boxed::Box;
   use embedded_hal::digital::v2::OutputPin;
-  use embedded_time::fixed_point::FixedPoint;
 
-  use rp_pico::hal::{
-    self,
-    clocks::{self, ClockSource},
-    gpio,
-    uart::UartPeripheral,
-    Sio,
-  };
-  use systick_monotonic::*;
+  use rp2040_monotonic::Rp2040Monotonic;
+  use rp_pico::hal::{self, clocks, gpio, uart::UartPeripheral, Sio};
 
   use crate::{
     remote,
@@ -26,9 +19,11 @@ mod inner_app {
     ALLOCATOR,
   };
 
+  pub type Monotonic = Rp2040Monotonic;
+
   // A monotonic timer to enable scheduling in RTIC
-  #[monotonic(binds = SysTick, default = true)]
-  type MyMono = Systick<100_000>; // frequency in Hz determining granularity
+  #[monotonic(binds = TIMER_IRQ_0, default = true)]
+  type RticMonotonicSpecification = Monotonic;
 
   type LedPin = gpio::Pin<gpio::bank0::Gpio25, gpio::Output<gpio::PushPull>>;
 
@@ -63,10 +58,6 @@ mod inner_app {
     .ok()
     .unwrap();
 
-    let systick = ctx.core.SYST;
-    let systick_freq = clocks.system_clock.get_freq().integer();
-    let mono = Systick::new(systick, systick_freq);
-
     let sio = Sio::new(ctx.device.SIO);
     let pins = rp_pico::Pins::new(
       ctx.device.IO_BANK0,
@@ -99,11 +90,9 @@ mod inner_app {
       &mut ctx.device.RESETS,
     );
 
-    let remote_task = remote::RemoteTask::init(
-      pins.gpio3.into_floating_input(),
-      ctx.device.TIMER,
-      &mut ctx.device.RESETS,
-    );
+    let remote_task = remote::RemoteTask::init(pins.gpio3.into_floating_input());
+
+    let mono = Monotonic::new(ctx.device.TIMER);
 
     (
       Shared { show, cancel },
