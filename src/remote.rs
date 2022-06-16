@@ -15,12 +15,7 @@ use rtic::mutex_prelude::TupleExt02;
 type IrProto = infrared::protocol::Nec;
 type IrCommand = <IrProto as infrared::Protocol>::Cmd;
 pub type IrReceiverPin = gpio::Pin<gpio::bank0::Gpio3, gpio::Input<gpio::Floating>>;
-pub type IrReceiver = infrared::Receiver<
-  IrProto,
-  ir::receiver::Event,
-  ir::receiver::PinInput<IrReceiverPin>,
-  irrc::Button<NadRc512>,
->;
+pub type IrReceiver = infrared::Receiver<IrProto, IrReceiverPin, u32, irrc::Button<NadRc512>>;
 
 pub struct RemoteTask {
   ir_receiver: IrReceiver,
@@ -35,7 +30,6 @@ impl RemoteTask {
 
     let ir_receiver: IrReceiver = ir::Receiver::builder()
       .pin(ir_pin)
-      .event_driven()
       .protocol::<IrProto>()
       .remotecontrol(NadRc512)
       .build();
@@ -60,7 +54,7 @@ pub fn remote_task(ctx: remote_task::Context) {
   } = ctx.local.remote_task;
   let SharedResources { show, cancel } = ctx.shared;
 
-  let pin = ir_receiver.pin();
+  let pin = ir_receiver.pin_mut();
   pin.clear_interrupt(gpio::Interrupt::EdgeHigh);
   pin.clear_interrupt(gpio::Interrupt::EdgeLow);
 
