@@ -1,7 +1,6 @@
 use cortex_m::prelude::*;
 
 use crate::{
-  app::shared_resources::cancel_lock,
   light::{
     color::NormColor,
     controller::{MemoryController, MemoryControllerExt, U32MemoryController},
@@ -18,9 +17,14 @@ pub struct RgbClockShow {
   with_seconds: bool,
 }
 impl Show for RgbClockShow {
-  fn run(&mut self, lights: &mut Lights, mut asm_delay: AsmDelay, cancel: &mut cancel_lock) {
-    let mut ctrl = U32MemoryController::new(lights, asm_delay);
-
+  fn run(
+    &mut self,
+    cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
+    ctrl: &mut U32MemoryController,
+    mut asm_delay: AsmDelay,
+    _remote_input: &mut crate::app::shared_resources::remote_input_lock,
+    _configuration: &mut crate::app::shared_resources::configuration_lock,
+  ) {
     const N24: usize = Lights::N / 24;
     const N60: usize = Lights::N / 60;
 
@@ -54,12 +58,12 @@ pub struct SeparatedClockShow;
 impl Show for SeparatedClockShow {
   fn run(
     &mut self,
-    lights: &mut Lights,
+    cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
+    ctrl: &mut U32MemoryController,
     mut asm_delay: AsmDelay,
-    cancel: &mut crate::app::shared_resources::cancel_lock,
+    _remote_input: &mut crate::app::shared_resources::remote_input_lock,
+    _configuration: &mut crate::app::shared_resources::configuration_lock,
   ) {
-    let mut ctrl = U32MemoryController::new(lights, asm_delay);
-
     let cn = Lights::N / 2;
     let n12 = cn / 12;
     let n60 = cn / 60;

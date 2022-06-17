@@ -1,5 +1,4 @@
 use crate::{
-  app::shared_resources::cancel_lock,
   light::{
     color::NormColor,
     controller::{MemoryController, MemoryControllerExt, U32MemoryController},
@@ -17,9 +16,14 @@ impl<'a> ByteShow<'a> {
   }
 }
 impl Show for ByteShow<'_> {
-  fn run(&mut self, lights: &mut Lights, asm_delay: AsmDelay, _cancel: &mut cancel_lock) {
-    let mut ctrl = U32MemoryController::new(lights, asm_delay);
-
+  fn run(
+    &mut self,
+    _cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
+    ctrl: &mut U32MemoryController,
+    _asm_delay: AsmDelay,
+    _remote_input: &mut crate::app::shared_resources::remote_input_lock,
+    _configuration: &mut crate::app::shared_resources::configuration_lock,
+  ) {
     let nbytes = self.0.len();
     let nbits = 8 * nbytes;
     let nspace = (8 + 1) * nbytes;

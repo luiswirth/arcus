@@ -2,7 +2,6 @@ use arclib::{nl, ONE};
 use embedded_hal::blocking::delay::DelayMs;
 
 use crate::{
-  app::shared_resources::cancel_lock,
   light::{
     color::NormColor,
     controller::{MemoryController, MemoryControllerExt, U32MemoryController},
@@ -11,16 +10,21 @@ use crate::{
   util::AsmDelay,
 };
 
-use super::Show;
+use super::{GradientShow, Show};
 use crate::return_cancel;
 
 #[derive(Default)]
 pub struct DemoShow;
 
 impl Show for DemoShow {
-  fn run(&mut self, lights: &mut Lights, mut asm_delay: AsmDelay, cancel: &mut cancel_lock) {
-    let mut ctrl = U32MemoryController::new(lights, asm_delay);
-
+  fn run(
+    &mut self,
+    cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
+    ctrl: &mut U32MemoryController,
+    mut asm_delay: AsmDelay,
+    remote_input: &mut crate::app::shared_resources::remote_input_lock,
+    configuration: &mut crate::app::shared_resources::configuration_lock,
+  ) {
     ctrl.set_all(NormColor::NONE);
 
     loop {
@@ -38,11 +42,6 @@ impl Show for DemoShow {
           asm_delay.delay_ms(2);
           return_cancel!(cancel);
         }
-        for brightness in 0..256u32 {
-          let brightness = nl!(brightness) / nl!(255u32);
-          ctrl.set_all(color.scale_rgbw(brightness));
-          ctrl.display();
-        }
         ctrl.set_all(NormColor::NONE);
         ctrl.display();
       }
@@ -58,6 +57,14 @@ impl Show for DemoShow {
         asm_delay.delay_ms(16);
         return_cancel!(cancel);
       }
+
+      GradientShow::new([NormColor::RED, NormColor::YELLOW]).run(
+        cancel,
+        ctrl,
+        asm_delay,
+        remote_input,
+        configuration,
+      );
     }
   }
 }

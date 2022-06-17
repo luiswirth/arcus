@@ -1,6 +1,10 @@
-use crate::util::AsmDelay;
+use rtic::Mutex;
+
+use crate::{app::shared_resources::configuration_lock, util::AsmDelay};
 
 use super::{Lights, NormColor};
+
+// TODO: every controller should respect configuration (brightness etc.)
 
 /// Raw Controller.
 /// Doesn't have a memory associated.
@@ -81,6 +85,18 @@ impl<'a> ColorMemoryController<'a> {
       memory,
       asm_delay,
     }
+  }
+
+  pub fn display_with_config(&mut self, config_lock: &mut configuration_lock) {
+    let brightness = config_lock.lock(|config| config.brightness);
+    self.lights.write_iter(
+      self
+        .memory
+        .into_iter()
+        .map(|c| c.scale_rgbw(brightness))
+        .map(|c| c.into_u32()),
+      self.asm_delay,
+    );
   }
 }
 impl<'a> MemoryController<'a> for ColorMemoryController<'a> {
