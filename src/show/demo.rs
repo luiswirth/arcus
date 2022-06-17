@@ -4,7 +4,7 @@ use embedded_hal::blocking::delay::DelayMs;
 use crate::{
   light::{
     color::NormColor,
-    controller::{MemoryController, MemoryControllerExt, U32MemoryController},
+    controller::{ColorMemoryController, MemoryController, MemoryControllerExt},
     Lights,
   },
   util::AsmDelay,
@@ -20,10 +20,10 @@ impl Show for DemoShow {
   fn run(
     &mut self,
     cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
-    ctrl: &mut U32MemoryController,
+    ctrl: &mut ColorMemoryController,
     mut asm_delay: AsmDelay,
     remote_input: &mut crate::app::shared_resources::remote_input_lock,
-    configuration: &mut crate::app::shared_resources::configuration_lock,
+    config: &mut crate::app::shared_resources::config_lock,
   ) {
     ctrl.set_all(NormColor::NONE);
 
@@ -32,18 +32,18 @@ impl Show for DemoShow {
       for color in NormColor::STANDARD_PALETTE {
         for l in 0..Lights::N {
           ctrl.set(l, color);
-          ctrl.display();
+          ctrl.display(config);
           asm_delay.delay_ms(2);
           return_cancel!(cancel);
         }
         for l in 0..Lights::N {
           ctrl.set(l, NormColor::NONE);
-          ctrl.display();
+          ctrl.display(config);
           asm_delay.delay_ms(2);
           return_cancel!(cancel);
         }
         ctrl.set_all(NormColor::NONE);
-        ctrl.display();
+        ctrl.display(config);
       }
       for shift in 0..360u32 {
         let shiftf = nl!(shift) / nl!(360u32 - 1);
@@ -53,7 +53,7 @@ impl Show for DemoShow {
           let color = NormColor::from_hsv(hue, ONE, ONE);
           ctrl.set(l, color);
         }
-        ctrl.display();
+        ctrl.display(config);
         asm_delay.delay_ms(16);
         return_cancel!(cancel);
       }
@@ -63,7 +63,7 @@ impl Show for DemoShow {
         ctrl,
         asm_delay,
         remote_input,
-        configuration,
+        config,
       );
     }
   }

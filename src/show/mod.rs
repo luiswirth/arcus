@@ -3,7 +3,7 @@ use crate::{
     self,
     show_task::{self, SharedResources},
   },
-  light::{controller::U32MemoryController, Lights, LightsPin},
+  light::{controller::ColorMemoryController, Lights, LightsPin},
   util::AsmDelay,
 };
 
@@ -58,12 +58,12 @@ pub fn show_task(ctx: show_task::Context) {
   let ShowTask { lights, asm_delay } = ctx.local.show_task;
   let SharedResources {
     mut show_cancellation_token,
-    mut configuration,
+    mut config,
     mut remote_input,
   } = ctx.shared;
-  let show_take = configuration.lock(|s| s.show.take());
+  let show_take = config.lock(|s| s.show.take());
   if let Some(mut show) = show_take {
-    let mut ctrl = U32MemoryController::new(lights, *asm_delay);
+    let mut ctrl = ColorMemoryController::new(lights, *asm_delay);
 
     show_cancellation_token.lock(|token| token.reset());
     Show::run(
@@ -72,7 +72,7 @@ pub fn show_task(ctx: show_task::Context) {
       &mut ctrl,
       *asm_delay,
       &mut remote_input,
-      &mut configuration,
+      &mut config,
     );
   }
   show_task::spawn().unwrap();
@@ -82,10 +82,10 @@ pub trait Show {
   fn run(
     &mut self,
     cancel: &mut app::shared_resources::show_cancellation_token_lock,
-    ctrl: &mut U32MemoryController,
+    ctrl: &mut ColorMemoryController,
     asm_delay: AsmDelay,
     remote_input: &mut app::shared_resources::remote_input_lock,
-    configuration: &mut app::shared_resources::configuration_lock,
+    config: &mut app::shared_resources::config_lock,
   );
 }
 

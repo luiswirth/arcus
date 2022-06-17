@@ -16,6 +16,7 @@ pub struct InputTask {
 pub enum InputState {
   Waiting,
   ShowSelection,
+  BrightnessSelection,
 }
 impl Default for InputState {
   fn default() -> Self {
@@ -26,8 +27,9 @@ impl Default for InputState {
 pub fn input_task(ctx: input_task::Context) {
   let InputTask { state } = ctx.local.input_task;
   let SharedResources {
-    mut configuration,
     mut remote_input,
+    mut config,
+    mut show_cancellation_token,
   } = ctx.shared;
 
   let remote_action = remote_input
@@ -36,19 +38,38 @@ pub fn input_task(ctx: input_task::Context) {
 
   match &state {
     InputState::Waiting => match remote_action {
-      Action::Rewind => {
-        configuration.lock(|settings| settings.brightness -= nl!(0.1));
+      Action::Stop => {
+        show_cancellation_token.lock(|cancel| cancel.request());
       }
       Action::Play_Pause => {
         *state = InputState::ShowSelection;
+      }
+      Action::Time => {
+        *state = InputState::BrightnessSelection;
+      }
+      Action::Rewind => {
+        config.lock(|config| config.brightness = (config.brightness - nl!(0.05)).max(nl!(0.0)));
+      }
+      Action::Forward => {
+        config.lock(|config| config.brightness = (config.brightness + nl!(0.05)).min(nl!(1.0)));
       }
       _ => {
         remote_input.lock(|input| input.0 = Some(remote_action));
       }
     },
     InputState::ShowSelection => {
-      configuration.lock(|settings| settings.show = next_show(remote_action));
-      *state = InputState::Waiting;
+      if let Some(next_show) = next_show(remote_action) {
+        config.lock(|config| config.show = Some(next_show));
+        show_cancellation_token.lock(|cancel| cancel.request());
+        *state = InputState::Waiting;
+      }
+    }
+    InputState::BrightnessSelection => {
+      if let Some(brightness) = number_from_action(remote_action) {
+        let brightness = nl!(brightness) / nl!(9);
+        config.lock(|config| config.brightness = brightness);
+        *state = InputState::Waiting;
+      }
     }
   }
 }
@@ -95,12 +116,11 @@ fn next_show(action: Action) -> Option<Box<dyn Show + Send>> {
   } else {
     match action {
       Action::Stop       => show!(show::NullShow::default()),
-      Action::Play_Pause => show!(show::SnakeShow::default()),
-      Action::Random     => show!(show::RandomShow::default()),
+      Action::Prog       => show!(show::DemoShow::default()),
       Action::Time       => show!(show::SeparatedClockShow::default()),
+      Action::Random     => show!(show::RandomShow::default()),
+      Action::Teletext   => show!(show::SnakeShow::default()),
       Action::Repeat     => show!(show::ByteShow::new(BYTES)),
-      //Action::?        => None,
-      //Action::Prog       => show!(show::DemoShow::default()),
       Action::Prev       => None,
       Action::Next       => None,
       Action::Rewind     => None,

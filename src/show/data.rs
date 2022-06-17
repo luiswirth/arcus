@@ -1,7 +1,7 @@
 use crate::{
   light::{
     color::NormColor,
-    controller::{MemoryController, MemoryControllerExt, U32MemoryController},
+    controller::{ColorMemoryController, MemoryController, MemoryControllerExt},
     Lights,
   },
   util::AsmDelay,
@@ -19,10 +19,10 @@ impl Show for ByteShow<'_> {
   fn run(
     &mut self,
     _cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
-    ctrl: &mut U32MemoryController,
+    ctrl: &mut ColorMemoryController,
     _asm_delay: AsmDelay,
     _remote_input: &mut crate::app::shared_resources::remote_input_lock,
-    _configuration: &mut crate::app::shared_resources::configuration_lock,
+    config: &mut crate::app::shared_resources::config_lock,
   ) {
     let nbytes = self.0.len();
     let nbits = 8 * nbytes;
@@ -46,7 +46,7 @@ impl Show for ByteShow<'_> {
         }
       };
       ctrl.set_range((ispace * lper_space)..((ispace + 1) * lper_space), color);
-      ctrl.display();
+      ctrl.display(config);
     }
   }
 }

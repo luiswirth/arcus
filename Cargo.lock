@@ -26,10 +26,10 @@ name = "arcus"
 version = "0.1.0"
 dependencies = [
  "alloc-cortex-m",
+ "cordic",
  "cortex-m",
  "cortex-m-rt",
  "cortex-m-rtic",
- "cortex-m-semihosting",
  "embedded-hal",
  "embedded-time",
  "fixed",
@@ -113,6 +113,15 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cordic"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ed0a176c0b8c5c95fa0523177530364c5b68a8895d9745730dbfa692a7412d0"
+dependencies = [
+ "fixed",
+]
 
 [[package]]
 name = "cortex-m"

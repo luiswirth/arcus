@@ -43,19 +43,17 @@ pub fn remote_task(ctx: remote_task::Context) {
         remote_input.lock(|input| {
           input.0 = Some(action);
         });
+        input_task::spawn().unwrap();
       }
       None => {}
     },
-    // TODO: handle
-    Err(_e) => {}
+    Err(_) => unreachable!("This should be infalliable."),
     Ok(None) => {}
   };
 
   let pin = ir_receiver.pin_mut();
   pin.clear_interrupt(gpio::Interrupt::EdgeHigh);
   pin.clear_interrupt(gpio::Interrupt::EdgeLow);
-
-  input_task::spawn().unwrap();
 }
 
 #[derive(Default, Debug)]
@@ -86,8 +84,9 @@ impl irrc::RemoteControlModel for NadRc512 {
     (18, irrc::Action::Seven),
     (19, irrc::Action::Eight),
     (21, irrc::Action::Nine),
-    // TODO: map missing action
-    //(77, irrc::Action::?),
+    // TODO: Find better fitting Action.
+    // NOTE: This is the "+10" Button.
+    (77, irrc::Action::Teletext),
     (76, irrc::Action::Zero),
     (11, irrc::Action::Prog),
     (5, irrc::Action::Prev),

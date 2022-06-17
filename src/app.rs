@@ -10,19 +10,22 @@ mod inner_app {
   use embedded_hal::digital::v2::OutputPin;
 
   use rp2040_monotonic::Rp2040Monotonic;
-  use rp_pico::hal::{self, clocks, gpio, uart::UartPeripheral, Sio};
+  use rp_pico::hal::{self, clocks, gpio, Sio};
 
   use crate::{
-    configuration::Configuration,
-    input,
-    remote::{self, RemoteInput},
+    config::Config,
+    input::InputTask,
+    remote::{RemoteInput, RemoteTask},
     show::{self, ShowCancellationToken},
+    uprintln,
+    util::uart::init_uart,
     ALLOCATOR,
   };
 
   pub type Monotonic = Rp2040Monotonic;
 
   // A monotonic timer to enable scheduling in RTIC
+  // NOTE: For some reason this type can't be made public. Therefore we introduce an indirection.
   #[monotonic(binds = TIMER_IRQ_0, default = true)]
   type RticMonotonicSpecification = Monotonic;
 
@@ -30,7 +33,7 @@ mod inner_app {
 
   #[shared]
   struct Shared {
-    configuration: Configuration,
+    config: Config,
     remote_input: RemoteInput,
     show_cancellation_token: ShowCancellationToken,
   }
@@ -38,8 +41,8 @@ mod inner_app {
   #[local]
   struct Local {
     show_task: show::ShowTask,
-    input_task: input::InputTask,
-    remote_task: remote::RemoteTask,
+    input_task: InputTask,
+    remote_task: RemoteTask,
   }
 
   #[init]
@@ -69,22 +72,19 @@ mod inner_app {
       &mut ctx.device.RESETS,
     );
 
-    let mut led: LedPin = pins.led.into_push_pull_output();
-    led.set_low().unwrap();
-
-    let uart_pins = (
-      pins.gpio0.into_mode::<hal::gpio::FunctionUart>(),
-      pins.gpio1.into_mode::<hal::gpio::FunctionUart>(),
+    init_uart(
+      ctx.device.UART0,
+      &mut ctx.device.RESETS,
+      pins.gpio0.into_mode(),
+      pins.gpio1.into_mode(),
+      clocks.peripheral_clock.into(),
     );
-    let _uart = UartPeripheral::new(ctx.device.UART0, uart_pins, &mut ctx.device.RESETS)
-      .enable(
-        hal::uart::common_configs::_115200_8_N_1,
-        clocks.peripheral_clock.into(),
-      )
-      .unwrap();
+    uprintln!("uart initialized.");
 
-    let configuration = Configuration::default();
-    let remote_input = RemoteInput::default();
+    let mut led: LedPin = pins.led.into_push_pull_output();
+    led.set_high().unwrap();
+
+    let config = Config::default();
 
     let show_task = show::ShowTask::init(
       pins.gpio2.into_mode(),
@@ -94,15 +94,16 @@ mod inner_app {
     );
     let show_cancellation_token = ShowCancellationToken::default();
 
-    let input_task = input::InputTask::default();
+    let input_task = InputTask::default();
 
-    let remote_task = remote::RemoteTask::init(pins.gpio3.into_floating_input());
+    let remote_input = RemoteInput::default();
+    let remote_task = RemoteTask::init(pins.gpio3.into_floating_input());
 
     let mono = Monotonic::new(ctx.device.TIMER);
 
     (
       Shared {
-        configuration,
+        config,
         remote_input,
         show_cancellation_token,
       },
@@ -119,14 +120,14 @@ mod inner_app {
   extern "Rust" {
     #[task(
         priority = 1,
-        shared = [show_cancellation_token, configuration, remote_input],
+        shared = [show_cancellation_token, config, remote_input],
         local = [show_task],
     )]
     fn show_task(ctx: show_task::Context);
 
     #[task(
         priority = 2,
-        shared = [configuration, remote_input],
+        shared = [remote_input, config, show_cancellation_token],
         local = [input_task],
     )]
     fn input_task(ctx: input_task::Context);

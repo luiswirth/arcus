@@ -15,17 +15,17 @@ impl Show for RandomShow {
   fn run(
     &mut self,
     cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
-    ctrl: &mut crate::light::controller::U32MemoryController,
+    ctrl: &mut crate::light::controller::ColorMemoryController,
     _asm_delay: crate::util::AsmDelay,
     _remote_input: &mut crate::app::shared_resources::remote_input_lock,
-    _configuration: &mut crate::app::shared_resources::configuration_lock,
+    config: &mut crate::app::shared_resources::config_lock,
   ) {
     let mut rng = rand::rngs::SmallRng::seed_from_u64(monotonics::now().ticks());
     loop {
       for l in 0..Lights::N {
         ctrl.set(l, rng.gen());
       }
-      ctrl.display();
+      ctrl.display(config);
       return_cancel!(cancel);
     }
   }

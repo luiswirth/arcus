@@ -5,7 +5,7 @@ use crate::{
   app::monotonics,
   light::{
     color::NormColor,
-    controller::{MemoryController, MemoryControllerExt, U32MemoryController},
+    controller::{ColorMemoryController, MemoryController, MemoryControllerExt},
     Lights,
   },
   return_cancel,
@@ -30,10 +30,10 @@ impl Show for SnakeShow {
   fn run(
     &mut self,
     cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
-    ctrl: &mut U32MemoryController,
+    ctrl: &mut ColorMemoryController,
     _asm_delay: AsmDelay,
     _remote_input: &mut crate::app::shared_resources::remote_input_lock,
-    _configuration: &mut crate::app::shared_resources::configuration_lock,
+    config: &mut crate::app::shared_resources::config_lock,
   ) {
     let mut rng = rand::rngs::SmallRng::seed_from_u64(monotonics::now().ticks());
     let pos_distr = rand::distributions::Uniform::new(0, Lights::N);
@@ -59,7 +59,7 @@ impl Show for SnakeShow {
         ctrl.set(pos, segment);
       }
       ctrl.set(fruit.pos, fruit.color);
-      ctrl.display();
+      ctrl.display(config);
       snake.pos = (snake.pos + Lights::N - 1) % Lights::N;
       return_cancel!(cancel);
     }

@@ -3,7 +3,7 @@ use cortex_m::prelude::*;
 use crate::{
   light::{
     color::NormColor,
-    controller::{MemoryController, MemoryControllerExt, U32MemoryController},
+    controller::{ColorMemoryController, MemoryController, MemoryControllerExt},
     Lights,
   },
   return_cancel,
@@ -20,10 +20,10 @@ impl Show for RgbClockShow {
   fn run(
     &mut self,
     cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
-    ctrl: &mut U32MemoryController,
+    ctrl: &mut ColorMemoryController,
     mut asm_delay: AsmDelay,
     _remote_input: &mut crate::app::shared_resources::remote_input_lock,
-    _configuration: &mut crate::app::shared_resources::configuration_lock,
+    config: &mut crate::app::shared_resources::config_lock,
   ) {
     const N24: usize = Lights::N / 24;
     const N60: usize = Lights::N / 60;
@@ -44,7 +44,7 @@ impl Show for RgbClockShow {
             }
             ctrl.set(l, color);
           }
-          ctrl.display();
+          ctrl.display(config);
           asm_delay.delay_ms(500);
           return_cancel!(cancel);
         }
@@ -59,10 +59,10 @@ impl Show for SeparatedClockShow {
   fn run(
     &mut self,
     cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
-    ctrl: &mut U32MemoryController,
+    ctrl: &mut ColorMemoryController,
     mut asm_delay: AsmDelay,
     _remote_input: &mut crate::app::shared_resources::remote_input_lock,
-    _configuration: &mut crate::app::shared_resources::configuration_lock,
+    config: &mut crate::app::shared_resources::config_lock,
   ) {
     let cn = Lights::N / 2;
     let n12 = cn / 12;
@@ -85,7 +85,7 @@ impl Show for SeparatedClockShow {
           ctrl.set(cn + l, color);
         }
 
-        ctrl.display();
+        ctrl.display(config);
         asm_delay.delay_ms(100);
         return_cancel!(cancel);
       }

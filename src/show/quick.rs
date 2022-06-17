@@ -1,7 +1,7 @@
 use crate::{
   light::{
     color::NormColor,
-    controller::{MemoryControllerExt, U32MemoryController},
+    controller::{ColorMemoryController, MemoryControllerExt},
   },
   return_cancel,
   util::AsmDelay,
@@ -15,10 +15,10 @@ impl Show for QuickShow {
   fn run(
     &mut self,
     cancel: &mut crate::app::shared_resources::show_cancellation_token_lock,
-    ctrl: &mut U32MemoryController,
+    ctrl: &mut ColorMemoryController,
     _asm_delay: AsmDelay,
     _remote_input: &mut crate::app::shared_resources::remote_input_lock,
-    _configuration: &mut crate::app::shared_resources::configuration_lock,
+    _config: &mut crate::app::shared_resources::config_lock,
   ) {
     ctrl.set_all(NormColor::RED);
     return_cancel!(cancel);

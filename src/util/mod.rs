@@ -1,3 +1,5 @@
+pub mod uart;
+
 #[derive(Debug, Copy, Clone)]
 pub struct AsmDelay {
   cpu_freq_hz: u32,

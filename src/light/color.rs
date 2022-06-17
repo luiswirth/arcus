@@ -166,6 +166,13 @@ impl rand::distributions::Distribution<NormColor> for rand::distributions::Stand
 }
 
 impl NormColor {
+  /// Brightness `b` between 0.0 and 1.0
+  #[must_use]
+  pub fn brightness(self, mut b: Fix32) -> Self {
+    b = (cordic::exp(b) - nl!(1)) / (nl!(fixed::consts::E) - nl!(1));
+    self.scale_rgbw(b)
+  }
+
   #[must_use]
   pub fn scale_rgbw(self, scalar: Fix32) -> Self {
     NormColor::new(
