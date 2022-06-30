@@ -18,7 +18,7 @@ cortex-m-rt = "0.7.1"
 cortex-m-rtic = { git = "https://github.com/LU15W1R7H/cortex-m-rtic" }
 alloc-cortex-m = "0.4.2"
 
-rp-pico = "0.4.0"
+rp-pico = "0.4.1"
 pio = "0.2.0"
 infrared = "0.14.1"
 panic-semihosting = "0.6.0"
