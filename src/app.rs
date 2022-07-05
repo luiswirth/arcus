@@ -16,6 +16,7 @@ mod inner_app {
     config::Config,
     input::{
       remote::{RemoteInput, RemoteTask},
+      uart::UartTask,
       InputTask,
     },
     show::{self, ShowCancellationToken},
@@ -45,6 +46,7 @@ mod inner_app {
     show_task: show::ShowTask,
     input_task: InputTask,
     remote_task: RemoteTask,
+    uart_task: UartTask,
   }
 
   #[init]
@@ -101,6 +103,8 @@ mod inner_app {
     let remote_input = RemoteInput::default();
     let remote_task = RemoteTask::init(pins.gpio3.into_floating_input());
 
+    let uart_task = UartTask::init();
+
     let mono = Monotonic::new(ctx.device.TIMER);
 
     (
@@ -113,13 +117,14 @@ mod inner_app {
         show_task,
         input_task,
         remote_task,
+        uart_task,
       },
       init::Monotonics(mono),
     )
   }
 
   use crate::{
-    input::{input_task, remote::remote_task},
+    input::{input_task, remote::remote_task, uart::uart_task},
     show::show_task,
   };
   extern "Rust" {
@@ -144,5 +149,13 @@ mod inner_app {
         local = [remote_task],
     )]
     fn remote_task(ctx: remote_task::Context);
+
+    #[task(
+        binds = UART0_IRQ,
+        priority = 4,
+        shared = [remote_input],
+        local = [uart_task],
+    )]
+    fn uart_task(ctx: uart_task::Context);
   }
 }

@@ -21,9 +21,10 @@ pub fn init_uart(
   frequency: embedded_time::rate::Hertz,
 ) {
   let uart_pins = (pin0, pin1);
-  let peripheral: UartPeripheral = uart::UartPeripheral::new(peripheral, uart_pins, resets)
+  let mut peripheral: UartPeripheral = uart::UartPeripheral::new(peripheral, uart_pins, resets)
     .enable(uart::common_configs::_115200_8_N_1, frequency)
     .unwrap();
+  peripheral.enable_rx_interrupt();
 
   cortex_m::interrupt::free(|cs| {
     UART_PERIPHERAL.borrow(cs).replace(Some(peripheral));
