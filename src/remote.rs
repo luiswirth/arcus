@@ -50,7 +50,7 @@ pub fn remote_task(ctx: remote_task::Context) {
       }
       None => {}
     },
-    Err(e) => uprintln!("{:?}", e),
+    Err(e) => uprintln!("IR Receiver error: {:?}", e),
     Ok(None) => {}
   };
 
