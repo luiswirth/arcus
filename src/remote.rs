@@ -1,6 +1,9 @@
-use crate::app::{
-  self, input_task, monotonics,
-  remote_task::{self, SharedResources},
+use crate::{
+  app::{
+    self, input_task, monotonics,
+    remote_task::{self, SharedResources},
+  },
+  uprintln,
 };
 use infrared::{self as ir, remotecontrol as irrc};
 use rp_pico::hal::gpio;
@@ -47,7 +50,7 @@ pub fn remote_task(ctx: remote_task::Context) {
       }
       None => {}
     },
-    Err(_) => unreachable!("This should be infalliable."),
+    Err(e) => uprintln!("{:?}", e),
     Ok(None) => {}
   };
 
