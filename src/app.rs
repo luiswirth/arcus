@@ -14,8 +14,10 @@ mod inner_app {
 
   use crate::{
     config::Config,
-    input::InputTask,
-    remote::{RemoteInput, RemoteTask},
+    input::{
+      remote::{RemoteInput, RemoteTask},
+      InputTask,
+    },
     show::{self, ShowCancellationToken},
     uprintln,
     util::uart::init_uart,
@@ -116,7 +118,10 @@ mod inner_app {
     )
   }
 
-  use crate::{input::input_task, remote::remote_task, show::show_task};
+  use crate::{
+    input::{input_task, remote::remote_task},
+    show::show_task,
+  };
   extern "Rust" {
     #[task(
         priority = 1,

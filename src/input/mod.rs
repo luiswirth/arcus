@@ -1,3 +1,5 @@
+pub mod remote;
+
 use alloc::boxed::Box;
 use arclib::nl;
 use infrared::remotecontrol::Action;
