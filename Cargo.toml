@@ -26,6 +26,6 @@ rp2040-monotonic = "1.1.0"
 embedded-hal = "0.2.7"
 embedded-time = "0.12.1"
 
-fixed = "1.15.0"
+fixed = "1.16.0"
 cordic = "0.1.5"
 rand = { version = "0.8.5", default-features = false, features = [ "small_rng" ] }
