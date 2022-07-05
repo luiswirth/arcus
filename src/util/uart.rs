@@ -34,11 +34,12 @@ pub fn init_uart(
 macro_rules! uprint {
   ($($arg:tt)*) => {
     cortex_m::interrupt::free(|cs| {
+      use core::fmt::Write;
       let uart = UART_PERIPHERAL
         .borrow(cs)
         .borrow_mut()
         .as_mut()
-        .expect("uart not initialzied");
+        .expect("uart not initialized");
       write!(uart, $($arg)*)
     });
   };
@@ -48,14 +49,21 @@ macro_rules! uprint {
 macro_rules! uprintln {
   ($($arg:tt)*) => {
     cortex_m::interrupt::free(|cs| {
-        use core::fmt::Write;
+      use core::fmt::Write;
       let mut uart = $crate::util::uart::UART_PERIPHERAL
         .borrow(cs)
         .borrow_mut();
       let uart = uart
         .as_mut()
-        .expect("uart not initialzied");
-      write!(uart, $($arg)*).unwrap();
-    });
+        .expect("uart not initialized");
+      writeln!(uart, $($arg)*).unwrap();
+    })
   };
+}
+
+use core::panic::PanicInfo;
+#[panic_handler]
+fn panic(panic_info: &PanicInfo) -> ! {
+  uprintln!("{}", panic_info);
+  loop {}
 }

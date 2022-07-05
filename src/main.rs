@@ -11,8 +11,6 @@ pub mod remote;
 pub mod show;
 pub mod util;
 
-extern crate panic_semihosting;
-
 #[allow(unused_imports)]
 #[macro_use]
 extern crate alloc;

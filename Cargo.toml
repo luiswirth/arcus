@@ -21,7 +21,6 @@ alloc-cortex-m = "0.4.2"
 rp-pico = "0.4.1"
 pio = "0.2.0"
 infrared = "0.14.1"
-panic-semihosting = "0.6.0"
 rp2040-monotonic = "1.1.0"
 
 embedded-hal = "0.2.7"
