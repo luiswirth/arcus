@@ -1,3 +1,6 @@
+pub mod remote;
+pub mod uart;
+
 use alloc::boxed::Box;
 use arclib::nl;
 use infrared::remotecontrol::Action;

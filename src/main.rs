@@ -7,7 +7,6 @@ pub mod app;
 pub mod config;
 pub mod input;
 pub mod light;
-pub mod remote;
 pub mod show;
 pub mod util;
 

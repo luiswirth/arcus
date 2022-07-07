@@ -1,0 +1,5 @@
+#!/bin/sh
+
+sudo rfcomm bind 0 00:21:13:00:3B:0E
+minicom -D /dev/rfcomm0 -b 9600
+sudo rfcomm release 0

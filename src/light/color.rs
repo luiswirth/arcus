@@ -62,7 +62,25 @@ impl NormColor {
   }
 
   pub fn into_hsv(self) -> [Fix32; 3] {
-    unimplemented!()
+    let [r, g, b] = [self.r, self.g, self.b];
+    let cmax = r.max(g).max(b);
+    let cmin = r.min(g).min(b);
+    let delta = cmax - cmin;
+
+    let hue = if delta == ZERO {
+      ZERO
+    } else {
+      nl!(60) / nl!(360)
+        * match cmax {
+          c if c == r => ((g - b) / delta) % nl!(6),
+          c if c == g => (b - r) / delta + nl!(2),
+          c if c == b => (r - g) / delta + nl!(4),
+          _ => unreachable!(),
+        }
+    };
+    let sat = if cmax == ZERO { ZERO } else { delta / cmax };
+    let val = cmax;
+    [hue, sat, val]
   }
 }
 
