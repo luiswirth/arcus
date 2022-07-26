@@ -21,6 +21,7 @@ pub mod null;
 pub mod quick;
 pub mod random;
 pub mod snake;
+pub mod spotlight;
 pub mod uniform;
 
 pub use clock::{RgbClockShow, SeparatedClockShow};
@@ -31,6 +32,7 @@ pub use null::NullShow;
 pub use quick::QuickShow;
 pub use random::RandomShow;
 pub use snake::SnakeShow;
+pub use spotlight::SpotlightShow;
 pub use uniform::UniformShow;
 
 pub struct ShowTask {

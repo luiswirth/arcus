@@ -9,6 +9,8 @@ use infrared::{self as ir, remotecontrol as irrc};
 use rp_pico::hal::gpio;
 use rtic::Mutex;
 
+pub type Action = irrc::Action;
+
 #[derive(Debug, Default)]
 pub struct RemoteInput(pub Option<irrc::Action>);
 

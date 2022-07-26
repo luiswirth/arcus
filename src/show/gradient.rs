@@ -2,7 +2,7 @@ use arclib::nl;
 
 use crate::{
   light::{
-    color::NormColor,
+    color::NormRgbw,
     controller::{ColorMemoryController, MemoryController},
     Lights,
   },
@@ -11,10 +11,13 @@ use crate::{
 
 use super::Show;
 
-pub struct GradientShow([NormColor; 2]);
+pub struct GradientShow {
+  from: NormRgbw,
+  to: NormRgbw,
+}
 impl GradientShow {
-  pub fn new(colors: [NormColor; 2]) -> Self {
-    Self(colors)
+  pub fn new(from: NormRgbw, to: NormRgbw) -> Self {
+    Self { from, to }
   }
 }
 impl Show for GradientShow {
@@ -28,7 +31,7 @@ impl Show for GradientShow {
   ) {
     for l in 0..Lights::N {
       let lf = nl!(l) / nl!(Lights::N - 1);
-      ctrl.set(l, self.0[0].gradient_hsv(self.0[1], lf));
+      ctrl.set(l, self.from.gradient(self.to, lf));
     }
     ctrl.display(config);
   }

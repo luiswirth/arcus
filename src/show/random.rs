@@ -2,7 +2,7 @@ use rand::{Rng, SeedableRng};
 
 use crate::{
   app::monotonics,
-  light::{controller::MemoryController, Lights},
+  light::{color::NormHsv, controller::MemoryController, Lights},
   return_cancel,
 };
 
@@ -23,7 +23,7 @@ impl Show for RandomShow {
     let mut rng = rand::rngs::SmallRng::seed_from_u64(monotonics::now().ticks());
     loop {
       for l in 0..Lights::N {
-        ctrl.set(l, rng.gen());
+        ctrl.set(l, rng.gen::<NormHsv>().into());
       }
       ctrl.display(config);
       return_cancel!(cancel);

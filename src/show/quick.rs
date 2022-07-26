@@ -1,6 +1,6 @@
 use crate::{
   light::{
-    color::NormColor,
+    color::NormRgbw,
     controller::{ColorMemoryController, MemoryControllerExt},
   },
   return_cancel,
@@ -20,7 +20,7 @@ impl Show for QuickShow {
     _remote_input: &mut crate::app::shared_resources::remote_input_lock,
     _config: &mut crate::app::shared_resources::config_lock,
   ) {
-    ctrl.set_all(NormColor::RED);
+    ctrl.set_all(NormRgbw::RED);
     return_cancel!(cancel);
   }
 }

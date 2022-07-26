@@ -2,7 +2,7 @@ use rtic::Mutex;
 
 use crate::{app::shared_resources::config_lock, util::AsmDelay};
 
-use super::{Lights, NormColor};
+use super::{Lights, NormRgbw};
 
 /// Raw Controller.
 /// Doesn't have a memory associated.
@@ -21,14 +21,14 @@ impl<'a> RawController<'a> {
 pub trait MemoryController<'a> {
   const N: usize = Lights::N;
 
-  fn set(&mut self, i: usize, color: NormColor);
-  fn get(&self, i: usize) -> NormColor;
+  fn set(&mut self, i: usize, color: NormRgbw);
+  fn get(&self, i: usize) -> NormRgbw;
   /// Doesn't respect brightness
   fn display(&mut self, config: &mut config_lock);
 }
 pub trait MemoryControllerExt {
-  fn set_range(&mut self, range: core::ops::Range<usize>, color: NormColor);
-  fn set_all(&mut self, color: NormColor);
+  fn set_range(&mut self, range: core::ops::Range<usize>, color: NormRgbw);
+  fn set_all(&mut self, color: NormRgbw);
 }
 
 /// A memory controller which stores the color type.
@@ -36,12 +36,12 @@ pub trait MemoryControllerExt {
 /// Good if a lot of colors change between displays.
 pub struct ColorMemoryController<'a> {
   lights: &'a mut Lights,
-  memory: [NormColor; Lights::N],
+  memory: [NormRgbw; Lights::N],
   asm_delay: AsmDelay,
 }
 impl<'a> ColorMemoryController<'a> {
   pub fn new(lights: &'a mut Lights, asm_delay: AsmDelay) -> Self {
-    let memory = [NormColor::NONE; Lights::N];
+    let memory = [NormRgbw::NONE; Lights::N];
     Self {
       lights,
       memory,
@@ -50,11 +50,11 @@ impl<'a> ColorMemoryController<'a> {
   }
 }
 impl<'a> MemoryController<'a> for ColorMemoryController<'a> {
-  fn set(&mut self, i: usize, color: NormColor) {
+  fn set(&mut self, i: usize, color: NormRgbw) {
     self.memory[i] = color;
   }
 
-  fn get(&self, i: usize) -> NormColor {
+  fn get(&self, i: usize) -> NormRgbw {
     self.memory[i]
   }
 
@@ -75,13 +75,13 @@ impl<'a, M> MemoryControllerExt for M
 where
   M: MemoryController<'a>,
 {
-  fn set_range(&mut self, range: core::ops::Range<usize>, color: NormColor) {
+  fn set_range(&mut self, range: core::ops::Range<usize>, color: NormRgbw) {
     for i in range {
       self.set(i, color);
     }
   }
 
-  fn set_all(&mut self, color: NormColor) {
+  fn set_all(&mut self, color: NormRgbw) {
     for i in 0..Self::N {
       self.set(i, color);
     }

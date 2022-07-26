@@ -4,7 +4,7 @@ use rand::{prelude::Distribution, Rng, SeedableRng};
 use crate::{
   app::monotonics,
   light::{
-    color::NormColor,
+    color::{NormHsv, NormRgbw},
     controller::{ColorMemoryController, MemoryController, MemoryControllerExt},
     Lights,
   },
@@ -16,12 +16,12 @@ use super::Show;
 
 struct Snake {
   pub pos: usize,
-  pub tail: Vec<NormColor>,
+  pub tail: Vec<NormRgbw>,
 }
 
 struct Fruit {
   pub pos: usize,
-  pub color: NormColor,
+  pub color: NormRgbw,
 }
 
 #[derive(Default)]
@@ -43,16 +43,16 @@ impl Show for SnakeShow {
     };
     let mut fruit = Fruit {
       pos: pos_distr.sample(&mut rng),
-      color: rng.gen::<NormColor>(),
+      color: rng.gen::<NormHsv>().into(),
     };
 
     loop {
-      ctrl.set_all(NormColor::NONE);
+      ctrl.set_all(NormRgbw::NONE);
       if snake.pos == fruit.pos {
         snake.tail.insert(0, fruit.color);
         // TODO: don't spawn fruits inside snake
         fruit.pos = pos_distr.sample(&mut rng);
-        fruit.color = rng.gen::<NormColor>();
+        fruit.color = rng.gen::<NormHsv>().into();
       }
       for (i, &segment) in snake.tail.iter().enumerate() {
         let pos = (snake.pos + i) % Lights::N;

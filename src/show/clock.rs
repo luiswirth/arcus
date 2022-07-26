@@ -1,8 +1,10 @@
+use core::ops::Add;
+
 use cortex_m::prelude::*;
 
 use crate::{
   light::{
-    color::NormColor,
+    color::NormRgbw,
     controller::{ColorMemoryController, MemoryController, MemoryControllerExt},
     Lights,
   },
@@ -32,15 +34,15 @@ impl Show for RgbClockShow {
       for minute in 12..60 {
         for second in 0..60 {
           for l in 0..Lights::N {
-            let mut color = NormColor::NONE;
+            let mut color = NormRgbw::NONE;
             if l < (hour + 1) * N24 {
-              color = color.add_rgbw(NormColor::RED);
+              color = color.add(NormRgbw::RED);
             }
             if l < (minute + 1) * N60 {
-              color = color.add_rgbw(NormColor::GREEN);
+              color = color.add(NormRgbw::GREEN);
             }
             if self.with_seconds && l < (second + 1) * N60 {
-              color = color.add_rgbw(NormColor::BLUE);
+              color = color.add(NormRgbw::BLUE);
             }
             ctrl.set(l, color);
           }
@@ -70,16 +72,16 @@ impl Show for SeparatedClockShow {
 
     for hour in 0..12 {
       for minute in 0..60 {
-        ctrl.set_all(NormColor::NONE);
-        ctrl.set_range(0..(n12 * hour), NormColor::RED);
-        ctrl.set_range(cn..(cn + n60 * minute), NormColor::GREEN);
+        ctrl.set_all(NormRgbw::NONE);
+        ctrl.set_range(0..(n12 * hour), NormRgbw::RED);
+        ctrl.set_range(cn..(cn + n60 * minute), NormRgbw::GREEN);
 
         for i in 0..12 {
           let l = i * n12;
           let color = if i % 3 == 0 {
-            NormColor::BLUE
+            NormRgbw::BLUE
           } else {
-            NormColor::BLUE.mix_rgbw(NormColor::WHITE)
+            NormRgbw::BLUE.mix(NormRgbw::WHITE)
           };
           ctrl.set(l, color);
           ctrl.set(cn + l, color);

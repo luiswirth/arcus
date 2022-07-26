@@ -8,7 +8,7 @@ use rtic::Mutex;
 
 use crate::{
   app::input_task::{self, SharedResources},
-  light::color::NormColor,
+  light::color::NormRgbw,
   show::{self, Show},
 };
 
@@ -94,12 +94,12 @@ fn number_from_action(action: Action) -> Option<usize> {
   }
 }
 
-fn color_from_action(action: Action) -> Option<NormColor> {
+fn color_from_action(action: Action) -> Option<NormRgbw> {
   number_from_action(action).map(|i| {
     if i == 0 {
-      NormColor::NONE
+      NormRgbw::NONE
     } else {
-      NormColor::STANDARD_PALETTE[i - 1]
+      NormRgbw::STANDARD_PALETTE[i - 1]
     }
   })
 }
@@ -112,7 +112,7 @@ fn next_show(action: Action) -> Option<Box<dyn Show + Send>> {
     };
   }
 
-  const BYTES: &[u8] = &[0b1010_1010, 0b1111_1111, 0b0000_0000, 0b1100_1100];
+  //const BYTES: &[u8] = &[0b1010_1010, 0b1111_1111, 0b0000_0000, 0b1100_1100];
 
   if let Some(color) = color_from_action(action) {
     show!(show::UniformShow::new(color))
@@ -123,7 +123,8 @@ fn next_show(action: Action) -> Option<Box<dyn Show + Send>> {
       Action::Time       => show!(show::SeparatedClockShow::default()),
       Action::Random     => show!(show::RandomShow::default()),
       Action::Teletext   => show!(show::SnakeShow::default()),
-      Action::Repeat     => show!(show::ByteShow::new(BYTES)),
+      //Action::Repeat     => show!(show::ByteShow::new(BYTES)),
+      Action::Repeat      => show!(show::SpotlightShow::default()),
       Action::Prev       => None,
       Action::Next       => None,
       Action::Rewind     => None,

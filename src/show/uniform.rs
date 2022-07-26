@@ -1,6 +1,6 @@
 use crate::{
   light::{
-    color::NormColor,
+    color::NormRgbw,
     controller::{MemoryController, MemoryControllerExt},
   },
   return_cancel,
@@ -8,9 +8,9 @@ use crate::{
 
 use super::Show;
 
-pub struct UniformShow(NormColor);
+pub struct UniformShow(NormRgbw);
 impl UniformShow {
-  pub fn new(color: NormColor) -> Self {
+  pub fn new(color: NormRgbw) -> Self {
     Self(color)
   }
 }

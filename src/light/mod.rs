@@ -11,7 +11,7 @@ use rp_pico::{
   pac,
 };
 
-use self::color::NormColor;
+use self::color::NormRgbw;
 use crate::util::AsmDelay;
 
 pub struct Lights {

@@ -1,6 +1,6 @@
 use crate::{
   light::{
-    color::NormColor,
+    color::NormRgbw,
     controller::{ColorMemoryController, MemoryController, MemoryControllerExt},
     Lights,
   },
@@ -30,19 +30,19 @@ impl Show for ByteShow<'_> {
     let _lper_bit = Lights::N / nbits;
     let lper_space = Lights::N / nspace;
 
-    ctrl.set_all(NormColor::NONE);
+    ctrl.set_all(NormRgbw::NONE);
     for ispace in 0..nspace {
       let is_seperator = ispace % 9 == 8;
       let color = if is_seperator {
-        NormColor::NONE
+        NormRgbw::NONE
       } else {
         let byte = self.0[ispace / 9];
         let bit = ispace % 9;
         let bit = byte & (1 << bit);
         if bit != 0 {
-          NormColor::GREEN
+          NormRgbw::GREEN
         } else {
-          NormColor::RED
+          NormRgbw::RED
         }
       };
       ctrl.set_range((ispace * lper_space)..((ispace + 1) * lper_space), color);
